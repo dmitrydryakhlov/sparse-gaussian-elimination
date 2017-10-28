@@ -6,25 +6,12 @@
 #include "../include/utils.h"
 
 int main(int argc, char* argv[]) {
-	int m = 100;
-	int n = 100;
-	int nzz = 1000;
-	int Col[100];
-	int Row[100];
-	float Val[100];
-	float B[100];
-	float X[100];
-
-	//ReadMatrix();
-	SolverMatrix(n, m, nzz, Col, Row, Val, B, X);
-	CheckSolv(n, m, Col, Row, Val, X, B);
-	printf("All: success\n");
-
 	int error = 0;
 	int *I, *IU, *J, *JU;
 	double *val, *valU;
 	int *row, *col;
 	double *valCRS;
+	double *y, *b, *b1, *x;
 
 	int M, N, nz, nzU;
 	if (argc < 3) {
@@ -45,13 +32,51 @@ int main(int argc, char* argv[]) {
 
 	saveBinCRS(argv[2], N, row, col, valCRS);
 	printf("Finished saving CRS matrix\n");
+	int i, j = 0;
+	printf("\n Value \n");
+	for (i = 0; i < nzU; i++) {
+		printf("%f   ", valCRS[i]);
+	}
+	printf("\n col \n");
+	for (i = 0; i < nzU; i++) {
+		printf("%d   ", col[i]);
+	}
+	printf("\n row\n");
+	for (i = 0; i < N + 1; i++) {
+		printf("%d   ", row[i]);
+	}
+	printf("%d", N);
 
+	b = (double*)malloc((N) * sizeof(double));
+	y = (double*)malloc((N) * sizeof(double));
+
+	printf("\n b \n");
+	for (i = 0; i < N; i++) {
+		b[i] = i;
+		printf("%f   ", b[i]);
+	}
+
+	int index1, index2;
+	for (i = N - 1; i >= 0; i--) {
+		double sum = 0;
+		index1 = row[i];
+		index2 = row[i + 1];
+		for (j = index1+1; j < index2; j++) {
+			sum += val[j] * y[j];
+		}
+		y[i] = (b[i] - sum) / val[row[i]];
+	}
+	printf("\n y: \n");
+	for (i = 0; i < N; i++) {
+		printf("%f   ", y[i]);
+	}
+	free(y);
+	free(b);
 	free(I);
 	free(J);
 	free(val);
 	free(row);
 	free(col);
 	free(valCRS);
-
 	return 0;
 }
