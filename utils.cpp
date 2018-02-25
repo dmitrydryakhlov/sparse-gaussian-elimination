@@ -167,6 +167,17 @@ int cutUpperTriangleCOO(int nz, int * I, int * J, double * val, int * nzL, int *
 	return 0;
 }
 
+int transposeCOO(int nz, int * I, int * J, double * val, int nzT, int * IT, int * JT, double * valT)
+{
+	int i;
+	for (i = 0; i < nz; i++) {
+		IT[i] = J[i];
+		JT[i] = I[i];
+		valT[i] = val[i];
+	}
+	return 0;
+}
+
 int transposeCOO(int nz, int * I, int * J)
 {
 	int i;
@@ -244,17 +255,30 @@ void fillDiag(int * I, int * J, double * val, int * Inew, int * Jnew, double * v
 	}
 }
 
-int CheckSolv(int n, double * x, double * xCheck, double * solution)
+int CheckSolv(int n, double * x, double * xCheck)
 {
-	float eps = 0.001f;
+	double eps = 0.001;
 	int i, errors = 0;
 	for (i = 0; i < n; i++) {
 		if (((x[i] - xCheck[i]) > eps) || ((x[i] - xCheck[i]) < -eps))
 			errors++;
 		//printf("%f", x[i] - xCheck[i]);
-		printf(" i = %d , x[%d] = %f, xCheck[%d] = %f, solutin[%d] = %f \n", i, i, x[i], i, xCheck[i], i, solution[i]);
+		//printf(" i = %d , x[%d] = %f, xCheck[%d] = %f, \n", i, i, x[i], i, xCheck[i], i);
 	}
 	return errors;
+}
+
+double absError(int n, double * x, double * xCheck)
+{
+	double abserror = 0.0;
+	int i;
+	for (i = 0; i < n; i++) {
+		//printf("%.10f --- %.10f\n", x[i], xCheck[i]);
+		if (fabs(x[i] - xCheck[i]) > fabs(abserror)) {
+			abserror = fabs(x[i] - xCheck[i]);
+		}
+	}
+	return abserror;
 }
 
 void gaussBackLow(int N, double * y, double * b, double * valCrsL, int * colL, int * indxL)
