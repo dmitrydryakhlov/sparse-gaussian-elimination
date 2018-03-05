@@ -180,13 +180,13 @@ int main(int argc, char* argv[]) {
 		pt[i] = 0;
 	}
 
-	for (int i = nzU+1; i > 0; i--) {
+	/*for (int i = nzU+1; i > 0; i--) {
 		valCrsU[i] = valCrsU[i - 1];
 		colU[i] = colU[i - 1];
 	}
 	for (int i = N + 1; i > 0; i--) {
 		indxU[i] = indxU[i - 1];
-	}
+	}*/ //index 1 or 0
 
 	MKLx = NULL; // ????????????????????????????????????????
 	MKLTimeStart = clock() / (float)1000;
