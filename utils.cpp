@@ -1,10 +1,10 @@
 #include "utils.h"
 
-int readMTX(const char * fileName, int ** I, int ** J, double ** val, int * M, int * N, int * nz)
+long long readMTX(const char * fileName, long long ** I, long long ** J, double ** val, long long * M, long long * N, long long * nz)
 {
 	FILE *f;
-	int i;
-	int ret_code;
+	long long i;
+	long long ret_code;
 
 	if ((f = fopen(fileName, "r")) == NULL) {
 		printf("Can't open file %s\n", fileName);
@@ -16,8 +16,8 @@ int readMTX(const char * fileName, int ** I, int ** J, double ** val, int * M, i
 	if ((ret_code = mm_read_mtx_crd_size(f, M, N, nz)) != 0)
 		return 1;
 
-	(*I) = (int *)malloc((*nz) * sizeof(int));
-	(*J) = (int *)malloc((*nz) * sizeof(int));
+	(*I) = (long long *)malloc((*nz) * sizeof(long long));
+	(*J) = (long long *)malloc((*nz) * sizeof(long long));
 	(*val) = (double *)malloc((*nz) * sizeof(double));
 
 	for (i = 0; i < (*nz); i++)
@@ -30,10 +30,10 @@ int readMTX(const char * fileName, int ** I, int ** J, double ** val, int * M, i
 	return 0;
 }
 
-int mm_read_mtx_crd_size(FILE *f, int *M, int *N, int *nz)
+long long mm_read_mtx_crd_size(FILE *f, long long *M, long long *N, long long *nz)
 {
 	char line[MM_MAX_LINE_LENGTH];
-	int num_items_read;
+	long long num_items_read;
 
 	/* set return null parameter values, in case we exit with errors */
 	*M = *N = *nz = 0;
@@ -59,15 +59,15 @@ int mm_read_mtx_crd_size(FILE *f, int *M, int *N, int *nz)
 		return 0;
 }
 
-int COOtoCRS(int n, int nz, int *I, int *J, double *valCOO, int **indx, int **col, double **valCrs)
+long long COOtoCRS(long long n, long long nz, long long *I, long long *J, double *valCOO, long long **indx, long long **col, double **valCrs)
 {
-	int i;
-	int *places;
+	long long i;
+	long long *places;
 
-	(*indx) = (int*)malloc((n + 1) * sizeof(int));
-	(*col) = (int*)malloc((nz) * sizeof(int));
+	(*indx) = (long long*)malloc((n + 1) * sizeof(long long));
+	(*col) = (long long*)malloc((nz) * sizeof(long long));
 	(*valCrs) = (double*)malloc((nz) * sizeof(double));
-	places = (int*)malloc(n * sizeof(int));
+	places = (long long*)malloc((n+1) * sizeof(long long));
 
 	for (i = 0; i < n + 1; i++) {
 		(*indx)[i] = 0;
@@ -86,14 +86,14 @@ int COOtoCRS(int n, int nz, int *I, int *J, double *valCOO, int **indx, int **co
 	}
 	//sort each column
 	for (i = 0; i < n; i++) {
-		int start, finish, j, k;
+		long long start, finish, j, k;
 		start = (*indx)[i];
 		finish = (*indx)[i + 1];
 		//need to write bubble sort
 		for (j = start; j < finish; j++)
 			for (k = start; k < finish - j - 1; k++)
 				if ((*col)[k] > (*col)[k + 1]) {
-					int tempCol = (*col)[k];
+					long long tempCol = (*col)[k];
 					(*col)[k] = (*col)[k + 1];
 					(*col)[k + 1] = tempCol;
 
@@ -106,29 +106,29 @@ int COOtoCRS(int n, int nz, int *I, int *J, double *valCOO, int **indx, int **co
 	return 0;
 }
 
-int saveBinCRS(const char * fileName, int n, int * row, int * col, double * val)
+long long saveBinCRS(const char * fileName, long long n, long long * row, long long * col, double * val)
 {
 	FILE *f;
 	f = fopen(fileName, "wb");
-	fwrite(&n, sizeof(int), 1, f);
-	fwrite(&(row[n]), sizeof(int), 1, f);
-	fwrite(col, sizeof(int), row[n], f);
-	fwrite(row, sizeof(int), n + 1, f);
+	fwrite(&n, sizeof(long long), 1, f);
+	fwrite(&(row[n]), sizeof(long long), 1, f);
+	fwrite(col, sizeof(long long), row[n], f);
+	fwrite(row, sizeof(long long), n + 1, f);
 	fwrite(val, sizeof(double), row[n], f);
 	fclose(f);
 	return 0;
 }
 
-int cutLowerTriangleCOO(int nz, int * I, int * J, double * val, int * nzU, int ** IU, int ** JU, double ** valU)
+long long cutLowerTriangleCOO(long long nz, long long * I, long long * J, double * val, long long * nzU, long long ** IU, long long ** JU, double ** valU)
 {
-	int i, j;
+	long long i, j;
 	(*nzU) = 0;
 	for (i = 0; i < nz; i++) {
 		if (J[i] >= I[i])
 			(*nzU)++;
 	}
-	(*IU) = (int*)malloc((*nzU) * sizeof(int));
-	(*JU) = (int*)malloc((*nzU) * sizeof(int));
+	(*IU) = (long long*)malloc((*nzU) * sizeof(long long));
+	(*JU) = (long long*)malloc((*nzU) * sizeof(long long));
 	(*valU) = (double*)malloc((*nzU) * sizeof(double));
 
 	j = 0;
@@ -143,16 +143,16 @@ int cutLowerTriangleCOO(int nz, int * I, int * J, double * val, int * nzU, int *
 	return 0;
 }
 
-int cutUpperTriangleCOO(int nz, int * I, int * J, double * val, int * nzL, int ** IL, int ** JL, double ** valL)
+long long cutUpperTriangleCOO(long long nz, long long * I, long long * J, double * val, long long * nzL, long long ** IL, long long ** JL, double ** valL)
 {
-	int i, j;
+	long long i, j;
 	(*nzL) = 0;
 	for (i = 0; i < nz; i++) {
 		if (J[i] <= I[i])
 			(*nzL)++;
 	}
-	(*IL) = (int*)malloc((*nzL) * sizeof(int));
-	(*JL) = (int*)malloc((*nzL) * sizeof(int));
+	(*IL) = (long long*)malloc((*nzL) * sizeof(long long));
+	(*JL) = (long long*)malloc((*nzL) * sizeof(long long));
 	(*valL) = (double*)malloc((*nzL) * sizeof(double));
 
 	j = 0;
@@ -167,9 +167,9 @@ int cutUpperTriangleCOO(int nz, int * I, int * J, double * val, int * nzL, int *
 	return 0;
 }
 
-int transposeCOO(int nz, int * I, int * J, double * val, int nzT, int * IT, int * JT, double * valT)
+long long transposeCOO(long long nz, long long * I, long long * J, double * val, long long nzT, long long * IT, long long * JT, double * valT)
 {
-	int i;
+	long long i;
 	for (i = 0; i < nz; i++) {
 		IT[i] = J[i];
 		JT[i] = I[i];
@@ -178,11 +178,11 @@ int transposeCOO(int nz, int * I, int * J, double * val, int nzT, int * IT, int 
 	return 0;
 }
 
-int transposeCOO(int nz, int * I, int * J)
+long long transposeCOO(long long nz, long long * I, long long * J)
 {
-	int i;
+	long long i;
 	for (i = 0; i < nz; i++) {
-		int temp;
+		long long temp;
 		temp = I[i];
 		I[i] = J[i];
 		J[i] = temp;
@@ -190,55 +190,55 @@ int transposeCOO(int nz, int * I, int * J)
 	return 0;
 }
 
-void printmatrixSparceCOO(int n, int nz, int * I, int * J, double * val)
+void printmatrixSparceCOO(long long n, long long nz, long long * I, long long * J, double * val)
 {
-	int i;
+	long long i;
 	for (i = 0; i < nz; i++)
 		printf("%lf  %d  %d \n", I[i], J[i], val[i]);
 }
 
-int countZeroDiag(int * I, int * J, int nz, int N)
+long long countZeroDiag(long long * I, long long * J, long long nz, long long N)
 {
-	int count = 0;
-	for (int i = 0; i < nz; i++)
+	long long count = 0;
+	for (long long i = 0; i < nz; i++)
 		if (I[i] == J[i])
 			count++;
 	return N - count;
 }
 
-void getZerosDiagNumbers(int * I, int * J, int nz, int N, int count, int * addDiag)
+void getZerosDiagNumbers(long long * I, long long * J, long long nz, long long N, long long count, long long * addDiag)
 {
-	int ind = 0;
-	int* indexes = (int*)malloc(N * sizeof(int));
-	for (int i = 0; i < N; i++)
+	long long ind = 0;
+	long long* indexes = (long long*)malloc(N * sizeof(long long));
+	for (long long i = 0; i < N; i++)
 	{
 		indexes[i] = 0;
 	}
-	for (int i = 0; i < nz; i++)
+	for (long long i = 0; i < nz; i++)
 		if (I[i] == J[i])
 			indexes[I[i]] = 1;
-	for (int i = 0; i < N; i++)
+	for (long long i = 0; i < N; i++)
 		if (indexes[i] == 0) {
 			addDiag[ind] = i;
 			ind += 1;
 		}
 }
 
-void fillDiag(int * I, int * J, double * val, int * Inew, int * Jnew, double * valNew, int N, int nz, int nzNew, int * addDiag) {
-	for (int i = 0; i < nz; i++) {
+void fillDiag(long long * I, long long * J, double * val, long long * Inew, long long * Jnew, double * valNew, long long N, long long nz, long long nzNew, long long * addDiag) {
+	for (long long i = 0; i < nz; i++) {
 		Inew[i] = I[i];
 		Jnew[i] = J[i];
 		valNew[i] = val[i];
 	}
-	for (int i = nz; i < nzNew; i++) {
+	for (long long i = nz; i < nzNew; i++) {
 		Inew[i] = addDiag[i - nz];
 		Jnew[i] = addDiag[i - nz];
 		valNew[i] = 1.0;
 	}
-	for (int i = nz; i < nzNew; i++) {
-		int j = i;
+	for (long long i = nz; i < nzNew; i++) {
+		long long j = i;
 		while (j > 0 && Inew[j] <= Inew[j - 1]) {
-			int temp = Inew[j];
+			long long temp = Inew[j];
 			Inew[j] = Inew[j - 1];
 			Inew[j - 1] = temp;
 
@@ -255,25 +255,25 @@ void fillDiag(int * I, int * J, double * val, int * Inew, int * Jnew, double * v
 	}
 }
 
-int CheckSolv(int n, double * x, double * xCheck)
+long long CheckSolv(long long n, double * x, double * xCheck)
 {
 	double eps = 0.001;
-	int i, errors = 0;
+	long long i, errors = 0;
 	for (i = 0; i < n; i++) {
 		if (((x[i] - xCheck[i]) > eps) || ((x[i] - xCheck[i]) < -eps))
 			errors++;
-		//printf("%f", x[i] - xCheck[i]);
-		//printf(" i = %d , x[%d] = %f, xCheck[%d] = %f, \n", i, i, x[i], i, xCheck[i], i);
+		//prlong longf("%f", x[i] - xCheck[i]);
+		//prlong longf(" i = %d , x[%d] = %f, xCheck[%d] = %f, \n", i, i, x[i], i, xCheck[i], i);
 	}
 	return errors;
 }
 
-double absError(int n, double * x, double * xCheck)
+double absError(long long n, double * x, double * xCheck)
 {
 	double abserror = 0.0;
-	int i;
+	long long i;
 	for (i = 0; i < n; i++) {
-		//printf("%.10f --- %.10f\n", x[i], xCheck[i]);
+		//prlong longf("%.10f --- %.10f\n", x[i], xCheck[i]);
 		if (fabs(x[i] - xCheck[i]) > fabs(abserror)) {
 			abserror = fabs(x[i] - xCheck[i]);
 		}
@@ -281,9 +281,9 @@ double absError(int n, double * x, double * xCheck)
 	return abserror;
 }
 
-void gaussBackLow(int N, double * y, double * b, double * valCrsL, int * colL, int * indxL)
+void gaussBackLow(long long N, double * y, double * b, double * valCrsL, long long * colL, long long * indxL)
 {
-	int j, k, index_top, index_low;
+	long long j, k, index_top, index_low;
 	double sum;
 	y[0] = b[0] / valCrsL[indxL[0]];
 	for (k = 1; k < N; k++) {
@@ -297,9 +297,9 @@ void gaussBackLow(int N, double * y, double * b, double * valCrsL, int * colL, i
 	}
 }
 
-void gaussBackUp(int N, double * x, double * y, double * valCrsU, int * colU, int * indxU)
+void gaussBackUp(long long N, double * x, double * y, double * valCrsU, long long * colU, long long * indxU)
 {
-	int j, k, index_top, index_low;
+	long long j, k, index_top, index_low;
 	double sum;
 	x[N - 1] = y[N - 1] / valCrsU[indxU[N] - 1];
 	for (k = N - 2; k >= 0; k--) {
@@ -313,9 +313,9 @@ void gaussBackUp(int N, double * x, double * y, double * valCrsU, int * colU, in
 	}
 }
 
-void matrixMultVector(int N, double * x, double * xCheck, double * valCrs, int * col, int * indx)
+void matrixMultVector(long long N, double * x, double * xCheck, double * valCrs, long long * col, long long * indx)
 {
-	int i, j, index_top, index_low;
+	long long i, j, index_top, index_low;
 	double sum;
 	for (i = 0; i < N; i++) {
 		sum = 0;

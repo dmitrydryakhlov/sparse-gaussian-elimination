@@ -6,21 +6,21 @@
 #define MM_PREMATURE_EOF 12
 
 
-int readMTX(const char* fileName, int **I, int **J, double **val, int *M, int *N, int *nz);
-int mm_read_mtx_crd_size(FILE *f, int *M, int *N, int *nz);
-int COOtoCRS(int n, int nz, int *I, int *J, double *valCOO, int **indx, int **col, double **valCrs);
-int saveBinCRS(const char* fileName, int n, int *row, int *col, double *val);
-int cutLowerTriangleCOO(int nz, int *I, int *J, double *val, int *nzU, int **IU, int **JU, double **valU);
-int cutUpperTriangleCOO(int nz, int *I, int *J, double *val, int *nzL, int **IL, int **JL, double **valL);
-int transposeCOO(int nz, int *I, int *J, double *val, int nzL, int *IL, int *JL, double *valL);
-int transposeCOO(int nz, int *I, int *J );
-void printmatrixSparceCOO(int n, int nz, int *I, int *J, double  *val);
-int countZeroDiag(int *I, int *J, int nz, int N);
-void getZerosDiagNumbers(int *I, int *J, int nz, int N, int count, int* addDiag);
-void fillDiag(int *I, int *J, double *val, int *Inew, int *Jnew, double *valNew,
-	int N, int nz, int nzNew, int *addDiag);
-int CheckSolv(int n, double* x, double*xCheck);
-double absError(int n, double* x, double * xCheck);
-void gaussBackLow(int n, double* y, double* b, double *valCrsL, int* colL, int* indxL);
-void gaussBackUp(int n, double* x, double* y, double *valCrsU, int* colU, int* indxU);
-void matrixMultVector(int n, double* x, double* xCheck, double *valCrs, int* col, int* indx);
+long long readMTX(const char* fileName, long long **I, long long **J, double **val, long long *M, long long *N, long long *nz);
+long long mm_read_mtx_crd_size(FILE *f, long long *M, long long *N, long long *nz);
+long long COOtoCRS(long long n, long long nz, long long *I, long long *J, double *valCOO, long long **indx, long long **col, double **valCrs);
+long long saveBinCRS(const char* fileName, long long n, long long *row, long long *col, double *val);
+long long cutLowerTriangleCOO(long long nz, long long *I, long long *J, double *val, long long *nzU, long long **IU, long long **JU, double **valU);
+long long cutUpperTriangleCOO(long long nz, long long *I, long long *J, double *val, long long *nzL, long long **IL, long long **JL, double **valL);
+long long transposeCOO(long long nz, long long *I, long long *J, double *val, long long nzL, long long *IL, long long *JL, double *valL);
+long long transposeCOO(long long nz, long long *I, long long *J );
+void printmatrixSparceCOO(long long n, long long nz, long long *I, long long *J, double  *val);
+long long countZeroDiag(long long *I, long long *J, long long nz, long long N);
+void getZerosDiagNumbers(long long *I, long long *J, long long nz, long long N, long long count, long long* addDiag);
+void fillDiag(long long *I, long long *J, double *val, long long *Inew, long long *Jnew, double *valNew,
+	long long N, long long nz, long long nzNew, long long *addDiag);
+long long CheckSolv(long long n, double* x, double*xCheck);
+double absError(long long n, double* x, double * xCheck);
+void gaussBackLow(long long n, double* y, double* b, double *valCrsL, long long* colL, long long* indxL);
+void gaussBackUp(long long n, double* x, double* y, double *valCrsU, long long* colU, long long* indxU);
+void matrixMultVector(long long n, double* x, double* xCheck, double *valCrs, long long* col, long long* indx);
