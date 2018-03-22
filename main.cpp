@@ -1,18 +1,15 @@
-#pragma once
-
+п»ї#pragma once
 #define __DFP754_H_INCLUDED
 #include "mkl_types.h"
 #include <mkl.h>
 #include <mkl_pardiso.h>
 #include "mkl_spblas.h"
-
 #include <stdio.h>
 #include "utils.h"
 #include <stdlib.h>
 #include <omp.h>
 #include <time.h>
 #include <random>
-//#include "type.h"
 
 int main(int argc, char* argv[]) {
 	int error = 0;
@@ -20,45 +17,46 @@ int main(int argc, char* argv[]) {
 	float MyTimeFinish;
 	float MKLTimeStart;
 	float MKLTimeFinish;
-
 	long long *I, *IU, *J, *JU, *indxU, *colU, *IL, *JL, *colL, *indxL;
 	double *val, *valU, *valCrsU, *valCrsL, *valCooU, *valL, valCooL;
-	double *e, *y, *bx, *by, *x, *MKLx;
+	double *e, *y, *bx, *MKLbx, *by, *MKLby, *x, *MKLx, *MKLy;
 	long long N, M, nz, nzU, nzL;
 	long long i, j;
 	if (readMTX(argv[1], &I, &J, &val, &M, &N, &nz) != 0)
 		exit(0);
 
-	long long zeroDiagCount = countZeroDiag(I, J, nz, N);  //сколько диагональных элементов - нули
-	long long *addDiag = (long long*)malloc((zeroDiagCount+1) * sizeof(long long)); //
-	long long *Inew = (long long*)malloc((nz + zeroDiagCount+1) * sizeof(long long));
-	long long *Jnew = (long long*)malloc((nz + zeroDiagCount+1) * sizeof(long long));
-	double *valNew = (double*)malloc((nz + zeroDiagCount+1) * sizeof(double));
-	getZerosDiagNumbers(I, J, nz, N, zeroDiagCount, addDiag); //получаем номера строк, где нули на главной диагонали
-	fillDiag(I, J, val, Inew, Jnew, valNew, N, nz, nz + zeroDiagCount, addDiag);//избавляемя от нулей на гл диагонали
+	long long zeroDiagCount = countZeroDiag(I, J, nz, N);  //СЃРєРѕР»СЊРєРѕ РґРёР°РіРѕРЅР°Р»СЊРЅС‹С… СЌР»РµРјРµРЅС‚РѕРІ - РЅСѓР»Рё
+	long long *addDiag = (long long*)malloc((zeroDiagCount + 1) * sizeof(long long)); //
+	long long *Inew = (long long*)malloc((nz + zeroDiagCount + 1) * sizeof(long long));
+	long long *Jnew = (long long*)malloc((nz + zeroDiagCount + 1) * sizeof(long long));
+	double *valNew = (double*)malloc((nz + zeroDiagCount + 1) * sizeof(double));
+	getZerosDiagNumbers(I, J, nz, N, zeroDiagCount, addDiag); //РїРѕР»СѓС‡Р°РµРј РЅРѕРјРµСЂР° СЃС‚СЂРѕРє, РіРґРµ РЅСѓР»Рё РЅР° РіР»Р°РІРЅРѕР№ РґРёР°РіРѕРЅР°Р»Рё
+	fillDiag(I, J, val, Inew, Jnew, valNew, N, nz, nz + zeroDiagCount, addDiag);//РёР·Р±Р°РІР»СЏРµРјСЏ РѕС‚ РЅСѓР»РµР№ РЅР° РіР» РґРёР°РіРѕРЅР°Р»Рё
 	free(I); I = Inew;
 	free(J); J = Jnew;
 	free(val); val = valNew;
-	nz = nz + zeroDiagCount; //корректируем количество ненулевых элементов в итоговой матрице
+	nz = nz + zeroDiagCount; //РєРѕСЂСЂРµРєС‚РёСЂСѓРµРј РєРѕР»РёС‡РµСЃС‚РІРѕ РЅРµРЅСѓР»РµРІС‹С… СЌР»РµРјРµРЅС‚РѕРІ РІ РёС‚РѕРіРѕРІРѕР№ РјР°С‚СЂРёС†Рµ
 
 	y = (double*)malloc((N) * sizeof(double));
 	e = (double*)malloc((N) * sizeof(double));
 	bx = (double*)malloc((N) * sizeof(double));
+	MKLbx = (double*)malloc((N) * sizeof(double));
 	by = (double*)malloc((N) * sizeof(double));
+	MKLby = (double*)malloc((N) * sizeof(double));
 	x = (double*)malloc((N) * sizeof(double));
 	MKLx = (double*)malloc((N) * sizeof(double));
-	
+	MKLy = (double*)malloc((N) * sizeof(double));
 
-	for (i = 0; i < N; i++) {
-		e[i] = (double)rand()/3.0;
-		//bx[i] = (double)rand();
-	}
-	
-	//транспонирование
+
+	for (i = 0; i < N; i++)
+		e[i] = (double)rand() / 3.0;
+
+
+	//С‚СЂР°РЅСЃРїРѕРЅРёСЂРѕРІР°РЅРёРµ
 	//transposeCOO(nz, I, J);  
 	//printf("Finished transposing coordinate matrix\n");
-
 	//cutLowerTriangleCOO(nz, I, J, val, &nzU, &IU, &JU, &valU);
+
 	cutUpperTriangleCOO(nz, I, J, val, &nzL, &IL, &JL, &valL);
 	printf("Finished cutting coordinate matrix\n");
 
@@ -66,176 +64,100 @@ int main(int argc, char* argv[]) {
 	IU = (long long*)malloc((nzU) * sizeof(long long));
 	JU = (long long*)malloc((nzU) * sizeof(long long));
 	valU = (double*)malloc((nzU) * sizeof(double));
+
 	transposeCOO(nzL, IL, JL, valL, nzU, IU, JU, valU);
-	//printf("Finished cutting coordinate matrix\n");
-	
+
 	COOtoCRS(N, nzU, IU, JU, valU, &indxU, &colU, &valCrsU);
-	printf("Finished converting coordinate matrix to CRS matrix\n");
 
 	COOtoCRS(N, nzL, IL, JL, valL, &indxL, &colL, &valCrsL);
-	printf("Finished converting coordinate matrix to CRS matrix\n");
 
 	//saveBinCRS(argv[2], N, row, col, valCRS);
 	//printf("Finished saving CRS matrix\n");
 
-	
 	matrixMultVector(N, e, by, valCrsU, colU, indxU);// U*x = by
 	matrixMultVector(N, by, bx, valCrsL, colL, indxL);//L*by = bx
 
 	MyTimeStart = clock() / (float)CLOCKS_PER_SEC;
-	gaussBackLow(N, y, bx, valCrsL, colL, indxL);//находим y из L*y=bx
-	gaussBackUp (N, x, y, valCrsU, colU, indxU);//находим х из U*x=y
-	MyTimeFinish = clock() /(float)CLOCKS_PER_SEC;
+	gaussBackLow(N, y, bx, valCrsL, colL, indxL);//РЅР°С…РѕРґРёРј y РёР· L*y=bx
+	gaussBackUp(N, x, y, valCrsU, colU, indxU);//РЅР°С…РѕРґРёРј С… РёР· U*x=y
+	MyTimeFinish = clock() / (float)CLOCKS_PER_SEC;
 
+	//////////////MKL////////////////////////////////////////////////////////
+	const long long  MKLn = N;
+	long long	MKLerror = 0;
 
-	//////////////MKL////////////////
-	void *pt[64];
-	pt[0] = 0;
-	const long long maxfct = 1;
-	const long long MKLnz = nzU;
-	const long long	mnum = 1;
-	const long long	mtype = 11; // мб 1? матрица симметрична и положительно определена
-	const long long	phase = 333; // backward solver
-	long long	*perm = new long long[nzL+1];
-	perm[60] = 1;// перестановка
-	const long long	nrhs = 1; // число правых частей
-	const long long	msglvl = 1; // вывод статистической информации
-	long long	MKLerror = 0; // код ошибки
-	long long iparm[64];
-	for (i = 0; i < 64; i++)
-	{
-		iparm[i] = 0;
+	const long long MKLn_short = MKLn;
+
+	long long *colU_short = new long long[indxU[MKLn]];
+	long long *colL_short = new long long[indxL[MKLn]];
+
+	long long *indxU_short = new long long[MKLn + 1];
+	long long *indxL_short = new long long[MKLn + 1];
+
+	for (int l = 0; l < N; l++) {
+		MKLbx[l + 1] = bx[l];
 	}
-	//long long p = 0;
-	//iparm[60] = p;// используются параметры по умолчанию
-	iparm[0] = 1;
-	iparm[1] = 0;//2 
-	iparm[3] = 0;
-	iparm[4] = 0;
-	iparm[5] = 0;
-	iparm[6] = 0;
-	iparm[7] = 2;
-	iparm[8] = 0;
-	iparm[9] = 13;
-	iparm[10] = 1;
-	iparm[11] = 0;
-	iparm[12] = 1; 
-	iparm[13] = 0;
-	iparm[14] = 0;
-	iparm[15] = 0;
-	iparm[16] = 0;
-	iparm[17] = -1;
-	iparm[18] = -1; 
-	iparm[19] = 0;
-
-	iparm[35] = 1;
-	iparm[20] = 1;
-	iparm[24] = 1;
-	//iparm[33] = 1;
-	//iparm[34] = 1;
-	/*
-	iparm[21] = 0;
-	iparm[22] = 0;
-	iparm[23] = 0;
-	iparm[25] = 0;
-	iparm[26] = 0;
-	iparm[27] = 0;
-	iparm[28] = 0;
-	iparm[29] = 0;
-	iparm[30] = 0;
-	iparm[31] = 0;
-	iparm[32] = 0;
-	iparm[35] = 0;
-	iparm[36] = 0;
-	iparm[37] = 0;
-	iparm[38] = 0;
-	iparm[39] = 0;
-	iparm[40] = 0;
-	iparm[41] = 0;
-	iparm[42] = 0;
-	iparm[43] = 0;
-	iparm[44] = 0;
-	iparm[45] = 0;
-	iparm[46] = 0;
-	iparm[47] = 0;
-	iparm[48] = 0;
-	iparm[49] = 0;
-	iparm[50] = 0;
-	iparm[51] = 0;
-	iparm[52] = 0;
-	iparm[53] = 0;
-	iparm[54] = 0;
-	iparm[55] = 0;
-	iparm[56] = 0;
-	iparm[57] = 0;
-	iparm[58] = 0;
-	iparm[59] = 2;
-	iparm[60] = 0;
-	iparm[61] = 0;
-	iparm[62] = 0;
-	iparm[63] = 0;
-	*/
-	for (i = 0; i < 64; i++)
-	{
-		pt[i] = 0;
+	for (int l = 0; l < indxU[MKLn]; l++) {
+		colU[l] += 1;
+		colU_short[l] = colU[l];
+	}
+	for (int l = 0; l < indxL[MKLn]; l++) {
+		colL[l] += 1;
+		colL_short[l] = colL[l];
+	}
+	for (int l = 0; l < MKLn + 1; l++) {
+		indxU[l] += 1;
+		indxU_short[l] = indxU[l];
+	}
+	for (int l = 0; l < MKLn + 1; l++) {
+		indxL[l] += 1;
+		indxL_short[l] = indxL[l];
 	}
 
-	/*for (int i = nzU+1; i > 0; i--) {
-		valCrsU[i] = valCrsU[i - 1];
-		colU[i] = colU[i - 1];
-	}
-	for (int i = N + 1; i > 0; i--) {
-		indxU[i] = indxU[i - 1];
-	}*/ //index 1 or 0
-
-	MKLx = NULL; // ????????????????????????????????????????
 	MKLTimeStart = clock() / (float)1000;
-	for (i = 0; i < 3; i++) {
-		iparm[11] = i;
-		PARDISO(pt,
-			&maxfct,
-			&mnum,
-			&mtype,
-			&phase,
-			&MKLnz,
-			valCrsU,
-			indxU,
-			colU,
-			perm,
-			&nrhs,
-			iparm,
-			&msglvl,
-			bx,
-			MKLx,
-			&MKLerror);
-	}
+	mkl_dcsrtrsv("L", "N", "N", &MKLn_short, valCrsL, indxL_short, colL_short, bx, MKLy);
+	mkl_dcsrtrsv("U", "N", "N", &MKLn_short, valCrsU, indxU_short, colU_short, MKLy, MKLx);
 	MKLTimeFinish = clock() / (float)1000;
-	///////////////////MKL//////////////////////
 
-	printf("\n Size: %d x %d , nz = %d , nzL = %d , nzU = %d", N, N, nz, nzL, nzU);
+	/// ////////////////MKL//////////////////////////////////////////////////////////
+
+	printf("MKL error: %lld\n", MKLerror);
+	
+	for (int l = 0; l < N; l++) {
+		//printf(" MKLx[%d] = %lf,  x[%d] = %f, e[%d] = %f \n", l, MKLx[l], l, x[l], l, e[l]);
+	}
+
+	printf("\n Size: %d x %d , nz = %d , nzL = %d , nzU = %d\n", N, N, nz, nzL, nzU);
 	int errors = CheckSolv(N, e, x);
+	int MKLErrors = CheckSolv(N, e, MKLx);
 	double absErrors = absError(N, e, x);
-	if (errors == 0) { printf("\n All is Ok! absErrors = %.10f \n Time is %f\n", absErrors, (MyTimeFinish-MyTimeStart)*1000); }
+	double MKLAbsErrors = absError(N, e, MKLx);
+	if (errors == 0) { printf("\n All is Ok! absErrors = %.10f \n Time is %f\n", absErrors, (MyTimeFinish - MyTimeStart) * 1000); }
 	else { printf("\n Errors: %d/%d  , Time is %f\n", errors, N, (MyTimeFinish - MyTimeStart) * 1000); }
-	//printf("\n All is Ok! MyTime is %f (ms)", (MyTimeFinish - MyTimeStart)*1000);
-	//printf("\n All is Ok! MKLTime is %f (ms)", (MKLTimeFinish - MKLTimeStart) * 1000);
 
+
+	if (MKLErrors == 0) { printf("\n[MKL] All is Ok! absErrors = %.10f \n Time is %f\n", MKLAbsErrors, (MKLTimeFinish - MKLTimeStart) * 1000); }
+	else { printf("\n Errors: %d/%d  , MKLTime is %f\n", MKLErrors, N, (MKLTimeFinish - MKLTimeStart) * 1000); }
 
 	free(e);
-	free(IU);
-	free(JU);
-	free(valU);
 	free(y);
-	free(by);
 	free(bx);
+	free(by);
 	free(I);
+	free(IU);
 	free(J);
+	free(JU);
 	free(val);
-	free(indxU);
-	free(colU);
+	free(valU);
 	free(valCrsU);
-	free(indxL);
-	free(colL);
 	free(valCrsL);
+	free(colL);
+	free(colU);
+	free(MKLbx);
+	free(MKLby);
+	free(MKLx);
+	free(MKLy);
+	free(indxU);
+	free(indxL);
 	return 0;
 }
