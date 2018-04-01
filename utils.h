@@ -12,8 +12,8 @@ long long COOtoCRS(long long n, long long nz, long long *I, long long *J, double
 long long saveBinCRS(const char* fileName, long long n, long long *row, long long *col, double *val);
 long long cutLowerTriangleCOO(long long nz, long long *I, long long *J, double *val, long long *nzU, long long **IU, long long **JU, double **valU);
 long long cutUpperTriangleCOO(long long nz, long long *I, long long *J, double *val, long long *nzL, long long **IL, long long **JL, double **valL);
-long long transposeCOO(long long nz, long long *I, long long *J, double *val, long long nzL, long long *IL, long long *JL, double *valL);
-long long transposeCOO(long long nz, long long *I, long long *J );
+long long transposeCOO(long long nz, long long *I, long long *J, double *val, long long &nzL, long long **IL, long long **JL, double **valL);
+long long transposeCOO(long long nz, long long *I, long long *J);
 void printmatrixSparceCOO(long long n, long long nz, long long *I, long long *J, double  *val);
 long long countZeroDiag(long long *I, long long *J, long long nz, long long N);
 void getZerosDiagNumbers(long long *I, long long *J, long long nz, long long N, long long count, long long* addDiag);
@@ -24,3 +24,14 @@ double absError(long long n, double* x, double * xCheck);
 void gaussBackLow(long long n, double* y, double* b, double *valCrsL, long long* colL, long long* indxL);
 void gaussBackUp(long long n, double* x, double* y, double *valCrsU, long long* colU, long long* indxU);
 void matrixMultVector(long long n, double* x, double* xCheck, double *valCrs, long long* col, long long* indx);
+void checkAndFillDiag(long long** I, long long** J, long long &nz, long long N, double** val);
+void mallocVectors(double** y, double** e, double** bx,
+	double** MKLbx, double** by, double** MKLby, double** x, double** MKLx, double** MKLy, long long N);
+void randVector(double* b, int N); 
+void MKLPrepare(long long ** colU_short, long long ** colL_short, long long ** indxU_short,
+	long long ** indxL_short, const long long MKLn, long long* indxU, long long* indxL,
+	double* MKLbx, long long* colU, long long* colL, double* bx, long long N);
+void freeMem(double** y, double** e, double** bx,
+	double** MKLbx, double** by, double** MKLby, double** x, double** MKLx, double** MKLy,
+	long long** I, long long** IU, long long** J, long long** JU, long long** colU, long long** colL,
+	double** val, double** valU, double** valCrsU, double** valCrsL, long long** indxU, long long ** indxL);

@@ -1,5 +1,5 @@
 #include "utils.h"
-
+#include <omp.h>
 long long readMTX(const char * fileName, long long ** I, long long ** J, double ** val, long long * M, long long * N, long long * nz)
 {
 	FILE *f;
@@ -67,7 +67,7 @@ long long COOtoCRS(long long n, long long nz, long long *I, long long *J, double
 	(*indx) = (long long*)malloc((n + 1) * sizeof(long long));
 	(*col) = (long long*)malloc((nz) * sizeof(long long));
 	(*valCrs) = (double*)malloc((nz) * sizeof(double));
-	places = (long long*)malloc((n+1) * sizeof(long long));
+	places = (long long*)malloc((n + 1) * sizeof(long long));
 
 	for (i = 0; i < n + 1; i++) {
 		(*indx)[i] = 0;
@@ -167,13 +167,18 @@ long long cutUpperTriangleCOO(long long nz, long long * I, long long * J, double
 	return 0;
 }
 
-long long transposeCOO(long long nz, long long * I, long long * J, double * val, long long nzT, long long * IT, long long * JT, double * valT)
+long long transposeCOO(long long nz, long long * I, long long * J, double * val, long long &nzT, long long ** IT, long long ** JT, double ** valT)
 {
+	nzT = nz;
+	(*IT) = (long long*)malloc((nzT) * sizeof(long long));
+	(*JT) = (long long*)malloc((nzT) * sizeof(long long));
+	(*valT) = (double*)malloc((nzT) * sizeof(double));
+
 	long long i;
 	for (i = 0; i < nz; i++) {
-		IT[i] = J[i];
-		JT[i] = I[i];
-		valT[i] = val[i];
+		(*IT)[i] = J[i];
+		(*JT)[i] = I[i];
+		(*valT)[i] = val[i];
 	}
 	return 0;
 }
@@ -188,6 +193,90 @@ long long transposeCOO(long long nz, long long * I, long long * J)
 		J[i] = temp;
 	}
 	return 0;
+}
+
+void mallocVectors(double** y, double** e, double** bx,
+	double** MKLbx, double** by, double** MKLby,
+	double** x, double** MKLx, double** MKLy, long long N) {
+
+	(*y) = (double*)malloc((N) * sizeof(double));
+	(*e) = (double*)malloc((N) * sizeof(double));
+	(*bx) = (double*)malloc((N) * sizeof(double));
+	(*MKLbx) = (double*)malloc((N) * sizeof(double));
+	(*by) = (double*)malloc((N) * sizeof(double));
+	(*MKLby) = (double*)malloc((N) * sizeof(double));
+	(*x) = (double*)malloc((N) * sizeof(double));
+	(*MKLx) = (double*)malloc((N) * sizeof(double));
+	(*MKLy) = (double*)malloc((N) * sizeof(double));
+}
+
+void randVector(double* b, int N) {
+	for (int i = 0; i < N; i++) {
+		b[i] = (double)rand() / 3.0;
+	}
+}
+
+void MKLPrepare(long long ** colU_short, long long ** colL_short, long long ** indxU_short,
+	long long ** indxL_short, const long long MKLn, long long* indxU, long long* indxL,
+	double* MKLbx, long long* colU, long long* colL, double* bx, long long N)
+{
+	*colU_short = new long long[indxU[MKLn]];
+	*colL_short = new long long[indxL[MKLn]];
+	*indxU_short = new long long[MKLn + 1];
+	*indxL_short = new long long[MKLn + 1];
+
+	for (int l = 0; l < N; l++) {
+		MKLbx[l + 1] = bx[l];
+	}
+	for (int l = 0; l < indxU[MKLn]; l++) {
+		colU[l] += 1;
+		(*colU_short)[l] = colU[l];
+	}
+	for (int l = 0; l < indxL[MKLn]; l++) {
+		colL[l] += 1;
+		(*colL_short)[l] = colL[l];
+	}
+	for (int l = 0; l < MKLn + 1; l++) {
+		indxU[l] += 1;
+		(*indxU_short)[l] = indxU[l];
+	}
+	for (int l = 0; l < MKLn + 1; l++) {
+		indxL[l] += 1;
+		(*indxL_short)[l] = indxL[l];
+	}
+}
+
+void freeMem(double ** y, double ** e, double ** bx, double ** MKLbx, double ** by, double ** MKLby, double ** x, double ** MKLx, double ** MKLy, long long ** I, long long ** IU, long long ** J, long long ** JU, long long ** colU, long long ** colL, double ** val, double ** valU, double ** valCrsU, double ** valCrsL, long long ** indxU, long long ** indxL)
+{
+	free((*e));
+	free(*(y));
+	free((*bx));
+	free((*by));
+	free((*I));
+	free((*IU));
+	free((*J));
+	free((*JU));
+	free((*val));
+	free((*valU));
+	free((*valCrsU));
+	free((*valCrsL));
+	free((*colL));
+	free((*colU));
+	free((*MKLbx));
+	free((*MKLby));
+	free((*MKLx));
+	free((*MKLy));
+	free((*indxU));
+	free((*indxL));
+}
+
+
+
+void mallocMatrix(float*** a, int N) {
+	(*a) = new float *[N];
+	for (int i = 0; i < N; i++) {
+		(*a)[i] = new float[N];
+	}
 }
 
 void printmatrixSparceCOO(long long n, long long nz, long long * I, long long * J, double * val)
@@ -293,7 +382,7 @@ void gaussBackLow(long long N, double * y, double * b, double * valCrsL, long lo
 		for (j = index_top - 1; j >= index_low; j--) {
 			sum += valCrsL[j] * y[colL[j]];
 		}
-		y[k] = (b[k] - sum) / valCrsL[indxL[k+1]-1];
+		y[k] = (b[k] - sum) / valCrsL[indxL[k + 1] - 1];
 	}
 }
 
@@ -325,4 +414,19 @@ void matrixMultVector(long long N, double * x, double * xCheck, double * valCrs,
 		}
 		xCheck[i] = sum;
 	}
+}
+
+void checkAndFillDiag(long long** I, long long** J, long long &nz, long long N, double** val) {
+	long long zeroDiagCount = countZeroDiag((*I), (*J), nz, N);
+	long long *addDiag = (long long*)malloc((zeroDiagCount + 1) * sizeof(long long)); //
+	long long *Inew = (long long*)malloc((nz + zeroDiagCount + 1) * sizeof(long long));
+	long long *Jnew = (long long*)malloc((nz + zeroDiagCount + 1) * sizeof(long long));
+	double *valNew = (double*)malloc((nz + zeroDiagCount + 1) * sizeof(double));
+	getZerosDiagNumbers((*I), (*J), nz, N, zeroDiagCount, addDiag); //получаем номера строк, где нули на главной диагонали
+	fillDiag((*I), (*J), (*val), Inew, Jnew, valNew, N, nz, nz + zeroDiagCount, addDiag);//избавляемя от нулей на гл диагонали
+	free(*I); (*I) = Inew;
+	free(*J); (*J) = Jnew;
+	free(*val); (*val) = valNew;
+	nz = nz + zeroDiagCount;
+	printf("nzf = %d \n", nz);
 }
