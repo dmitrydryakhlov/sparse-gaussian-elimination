@@ -64,3 +64,10 @@ void COOtoCCS(long long N, long long nz, long long *I, long long *J, double *val
 void makeMatrix6x6COO(long long* I, long long* J, double* COOVal, long long NzL);
 
 void mallocMatrixCOO(long long ** I, long long ** J, double ** COOVal, long long NzL);
+
+void makeBlockMatrix8x8LowCOO(long long * I, long long * J, double * COOVal, long long NzL);
+void makeBlockMatrix8x8UpCOO(long long * I, long long * J, float * COOVal, long long NzL);
+void makeBlock8x8LowCCS(double *MatrixLowValCCS, long long *MatrixLowRowCCS, long long *MatrixLowIndxCCS, long long NzL, long long N);
+void makeBlock8x8UpCCS(double *MatrixUpValCCS, long long *MatrixUpRowCCS, long long *MatrixUpIndxCCS, long long NzU, long long N);
+void makeBlock8x8LowCRS(double *MatrixLowValCRS, long long *MatrixLowColCRS, long long *MatrixLowIndxCRS, long long NzL, long long N);
+void makeBlock8x8UpCRS(double *MatrixUpValCRS, long long *MatrixUpColCRS, long long *MatrixUpIndxCRS, long long NzU, long long N);

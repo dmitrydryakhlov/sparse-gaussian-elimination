@@ -502,42 +502,62 @@ void CalcSuperNodesLowCCS(double *MatrixLowVal, long long *MatrixLowRow, long lo
 	long long lowIndx = 0;
 	long long upIndx = 0;
 	for (long long j = 0; j < N - 1; j++) { //ןמ גסול סעמכבצאל/////////////////
-		lowIndx = MatrixLowIndx[j];
-		upIndx = MatrixLowIndx[j + 1];
-		for (long long i = lowIndx + 1; i < upIndx; i++) {
-			if (MatrixLowRow[i] != MatrixLowRow[i + (upIndx - lowIndx - 1)]) {
+		if ((MatrixLowIndx[j + 1] - MatrixLowIndx[j] - 1) == (MatrixLowIndx[j + 2] - MatrixLowIndx[j + 1])) {
+
+			lowIndx = MatrixLowIndx[j];
+			upIndx = MatrixLowIndx[j + 1];
+			if ((upIndx - lowIndx != 1) && (MatrixLowRow[lowIndx + 1] == MatrixLowRow[lowIndx] + 1)) {
+				for (long long i = lowIndx + 1; i < upIndx; i++) {
+					if (MatrixLowRow[i] != MatrixLowRow[i + (upIndx - lowIndx - 1)]) {
+						TmpNodes[NodesNLow] = j + 1;
+						NodesNLow++;
+						break;
+					}
+				}
+			}
+			else {
 				TmpNodes[NodesNLow] = j + 1;
 				NodesNLow++;
-				break;
 			}
+		}
+		else {
+			TmpNodes[NodesNLow] = j + 1;
+			NodesNLow++;
 		}
 	}
 	NodesNLow++;//for last = arr.length
 	(*SNodesLow) = new long long[NodesNLow];
-	for (long long i = 0; i < NodesNLow - 1; i++)
+	for (int i = 0; i < NodesNLow - 1; i++)
 		(*SNodesLow)[i] = TmpNodes[i];
 	(*SNodesLow)[NodesNLow - 1] = N;
 	delete[]TmpNodes;
+	return;
 }
 
 void CalcSuperNodesUpCCS(double * MatrixUpVal, long long * MatrixUpRow, long long * MatrixUpIndx,
 	long long ** SNodesUp, long long & NodesNUp, long long NzU, long long N) {
-	long long *TmpNodes = new long long[N];
 
+	long long *TmpNodes = new long long[N];
 	TmpNodes[0] = N - 1;
 	NodesNUp = 1;
 
 	long long lowIndx = 0;
 	long long upIndx = 0;
 	for (long long j = N - 1; j > 0; j--) { //ןמ גסול סעמכבצאל
-		upIndx = MatrixUpIndx[j];
-		lowIndx = MatrixUpIndx[j - 1];
-		for (long long i = upIndx - 1; i > lowIndx; i--) {
-			if (MatrixUpRow[i] != MatrixUpRow[i - (upIndx - lowIndx - 1)]) {
-				TmpNodes[NodesNUp] = j - 1;
-				NodesNUp++;
-				break;
+		if ((MatrixUpIndx[j + 1] - MatrixUpIndx[j] - 1) == (MatrixUpIndx[j] - MatrixUpIndx[j - 1])) {
+			upIndx = MatrixUpIndx[j + 1];
+			lowIndx = MatrixUpIndx[j];
+			for (long long i = upIndx - 1; i > lowIndx; i--) {
+				if (MatrixUpRow[i - 1] != MatrixUpRow[i - (upIndx - lowIndx)]) {
+					TmpNodes[NodesNUp] = j - 1;
+					NodesNUp++;
+					break;
+				}
 			}
+		}
+		else {
+			TmpNodes[NodesNUp] = j - 1;
+			NodesNUp++;
 		}
 	}
 	NodesNUp++;//for last = arr.length
@@ -547,6 +567,7 @@ void CalcSuperNodesUpCCS(double * MatrixUpVal, long long * MatrixUpRow, long lon
 
 	(*SNodesUp)[NodesNUp - 1] = 0;
 	delete[]TmpNodes;
+	return;
 }
 
 void changeBLowCCS(double *MatrixLowVal, long long *MatrixLowRow, long long *MatrixLowIndx,
@@ -660,4 +681,154 @@ void mallocMatrixCOO(long long ** I, long long ** J, double ** COOVal, long long
 		(*I) = new long long[NzL];
 		(*J) = new long long[NzL];
 		(*COOVal) = new double[NzL];
+}
+
+void makeBlockMatrix8x8LowCOO(long long * I, long long * J, double * COOVal, long long NzL) {
+	I[0] = 0;	J[0] = 0;	COOVal[0] = 1;
+	I[1] = 1;	J[1] = 0;	COOVal[1] = 1;
+	I[2] = 1;	J[2] = 1;	COOVal[2] = 1;
+	I[3] = 2;	J[3] = 0;	COOVal[3] = 1;
+	I[4] = 2;	J[4] = 1;	COOVal[4] = 1;
+	I[5] = 2;	J[5] = 2;	COOVal[5] = 1;
+	I[6] = 3;	J[6] = 2;	COOVal[6] = 1;
+	I[7] = 3;	J[7] = 3;	COOVal[7] = 1;
+	I[8] = 4;	J[8] = 2;	COOVal[8] = 1;
+	I[9] = 4;	J[9] = 3;	COOVal[9] = 1;
+	I[10] = 4;	J[10] = 4;	COOVal[10] = 1;
+	I[11] = 5;	J[11] = 0;	COOVal[11] = 1;
+	I[12] = 5;	J[12] = 1;	COOVal[12] = 1;
+	I[13] = 5;	J[13] = 5;	COOVal[13] = 1;
+	I[14] = 6;	J[14] = 2;	COOVal[14] = 1;
+	I[15] = 6;	J[15] = 3;	COOVal[15] = 1;
+	I[16] = 6;	J[16] = 6;	COOVal[16] = 1;
+	I[17] = 7;	J[17] = 4;	COOVal[17] = 1;
+	I[18] = 7;	J[18] = 6;	COOVal[18] = 1;
+	I[19] = 7;	J[19] = 7;	COOVal[19] = 1;
+}
+
+void makeBlockMatrix8x8UpCOO(long long * I, long long * J, double * COOVal, long long NzL) {
+	I[0] = 0;	J[0] = 0;	COOVal[0] = 1;
+	I[1] = 0;	J[1] = 1;	COOVal[1] = 1;
+	I[2] = 0;	J[2] = 2;	COOVal[2] = 1;
+	I[3] = 0;	J[3] = 5;	COOVal[3] = 1;
+	I[4] = 1;	J[4] = 1;	COOVal[4] = 1;
+	I[5] = 1;	J[5] = 2;	COOVal[5] = 1;
+	I[6] = 1;	J[6] = 5;	COOVal[6] = 1;
+	I[7] = 2;	J[7] = 2;	COOVal[7] = 1;
+	I[8] = 2;	J[8] = 3;	COOVal[8] = 1;
+	I[9] = 2;	J[9] = 4;	COOVal[9] = 1;
+	I[10] = 2;	J[10] = 6;	COOVal[10] = 1;
+	I[11] = 3;	J[11] = 3;	COOVal[11] = 1;
+	I[12] = 3;	J[12] = 4;	COOVal[12] = 1;
+	I[13] = 3;	J[13] = 6;	COOVal[13] = 1;
+	I[14] = 4;	J[14] = 4;	COOVal[14] = 1;
+	I[15] = 4;	J[15] = 7;	COOVal[15] = 1;
+	I[16] = 5;	J[16] = 5;	COOVal[16] = 1;
+	I[17] = 6;	J[17] = 6;	COOVal[17] = 1;
+	I[18] = 6;	J[18] = 7;	COOVal[18] = 1;
+	I[19] = 7;	J[19] = 7;	COOVal[19] = 1;
+}
+
+void makeBlock8x8LowCCS(double * MatrixLowValCCS, long long * MatrixLowRowCCS, long long * MatrixLowIndxCCS, long long NzL, long long N) {
+	for (long long i = 0; i < NzL; i++)
+		MatrixLowValCCS[i] = 1;
+
+	MatrixLowRowCCS[0] = 0; MatrixLowRowCCS[10] = 6;
+	MatrixLowRowCCS[1] = 1; MatrixLowRowCCS[11] = 3;
+	MatrixLowRowCCS[2] = 2; MatrixLowRowCCS[12] = 4;
+	MatrixLowRowCCS[3] = 5; MatrixLowRowCCS[13] = 6;
+	MatrixLowRowCCS[4] = 1; MatrixLowRowCCS[14] = 4;
+	MatrixLowRowCCS[5] = 2; MatrixLowRowCCS[15] = 7;
+	MatrixLowRowCCS[6] = 5; MatrixLowRowCCS[16] = 5;
+	MatrixLowRowCCS[7] = 2; MatrixLowRowCCS[17] = 6;
+	MatrixLowRowCCS[8] = 3; MatrixLowRowCCS[18] = 7;
+	MatrixLowRowCCS[9] = 4; MatrixLowRowCCS[19] = 7;
+
+	MatrixLowIndxCCS[0] = 0;
+	MatrixLowIndxCCS[1] = 4;
+	MatrixLowIndxCCS[2] = 7;
+	MatrixLowIndxCCS[3] = 11;
+	MatrixLowIndxCCS[4] = 14;
+	MatrixLowIndxCCS[5] = 16;
+	MatrixLowIndxCCS[6] = 17;
+	MatrixLowIndxCCS[7] = 19;
+	MatrixLowIndxCCS[8] = 20;
+}
+
+void makeBlock8x8UpCCS(double * MatrixUpValCCS, long long * MatrixUpRowCCS, long long * MatrixUpIndxCCS, long long NzU, long long N) {
+	for (long long i = 0; i < NzU; i++)
+		MatrixUpValCCS[i] = 1;
+
+	MatrixUpRowCCS[0] = 0; MatrixUpRowCCS[10] = 4;
+	MatrixUpRowCCS[1] = 0; MatrixUpRowCCS[11] = 0;
+	MatrixUpRowCCS[2] = 1; MatrixUpRowCCS[12] = 1;
+	MatrixUpRowCCS[3] = 0; MatrixUpRowCCS[13] = 5;
+	MatrixUpRowCCS[4] = 1; MatrixUpRowCCS[14] = 2;
+	MatrixUpRowCCS[5] = 2; MatrixUpRowCCS[15] = 3;
+	MatrixUpRowCCS[6] = 2; MatrixUpRowCCS[16] = 6;
+	MatrixUpRowCCS[7] = 3; MatrixUpRowCCS[17] = 4;
+	MatrixUpRowCCS[8] = 2; MatrixUpRowCCS[18] = 6;
+	MatrixUpRowCCS[9] = 3; MatrixUpRowCCS[19] = 7;
+
+	MatrixUpIndxCCS[0] = 0;
+	MatrixUpIndxCCS[1] = 1;
+	MatrixUpIndxCCS[2] = 3;
+	MatrixUpIndxCCS[3] = 6;
+	MatrixUpIndxCCS[4] = 8;
+	MatrixUpIndxCCS[5] = 11;
+	MatrixUpIndxCCS[6] = 14;
+	MatrixUpIndxCCS[7] = 17;
+	MatrixUpIndxCCS[8] = 20;
+}
+
+void makeBlock8x8LowCRS(double * MatrixLowValCRS, long long * MatrixLowColCRS, long long * MatrixLowIndxCRS, long long NzL, long long N) {
+	for (long long i = 0; i < NzL; i++)
+		MatrixLowValCRS[i] = 1;
+
+	MatrixLowColCRS[0] = 0; MatrixLowColCRS[10] = 4;
+	MatrixLowColCRS[1] = 0; MatrixLowColCRS[11] = 0;
+	MatrixLowColCRS[2] = 1; MatrixLowColCRS[12] = 1;
+	MatrixLowColCRS[3] = 0; MatrixLowColCRS[13] = 5;
+	MatrixLowColCRS[4] = 1; MatrixLowColCRS[14] = 2;
+	MatrixLowColCRS[5] = 2; MatrixLowColCRS[15] = 3;
+	MatrixLowColCRS[6] = 2; MatrixLowColCRS[16] = 6;
+	MatrixLowColCRS[7] = 3; MatrixLowColCRS[17] = 4;
+	MatrixLowColCRS[8] = 2; MatrixLowColCRS[18] = 6;
+	MatrixLowColCRS[9] = 3; MatrixLowColCRS[19] = 7;
+
+	MatrixLowIndxCRS[0] = 0;
+	MatrixLowIndxCRS[1] = 1;
+	MatrixLowIndxCRS[2] = 3;
+	MatrixLowIndxCRS[3] = 6;
+	MatrixLowIndxCRS[4] = 8;
+	MatrixLowIndxCRS[5] = 11;
+	MatrixLowIndxCRS[6] = 14;
+	MatrixLowIndxCRS[7] = 17;
+	MatrixLowIndxCRS[8] = 20;
+}
+
+void makeBlock8x8UpCRS(double * MatrixUpValCRS, long long * MatrixUpColCRS, long long * MatrixUpIndxCRS, long long NzU, long long N) {
+	for (long long i = 0; i < NzU; i++)
+		MatrixUpValCRS[i] = 1;
+
+	MatrixUpColCRS[0] = 0; MatrixUpColCRS[10] = 6;
+	MatrixUpColCRS[1] = 1; MatrixUpColCRS[11] = 3;
+	MatrixUpColCRS[2] = 2; MatrixUpColCRS[12] = 4;
+	MatrixUpColCRS[3] = 5; MatrixUpColCRS[13] = 6;
+	MatrixUpColCRS[4] = 1; MatrixUpColCRS[14] = 4;
+	MatrixUpColCRS[5] = 2; MatrixUpColCRS[15] = 7;
+	MatrixUpColCRS[6] = 5; MatrixUpColCRS[16] = 5;
+	MatrixUpColCRS[7] = 2; MatrixUpColCRS[17] = 6;
+	MatrixUpColCRS[8] = 3; MatrixUpColCRS[18] = 7;
+	MatrixUpColCRS[9] = 4; MatrixUpColCRS[19] = 7;
+
+	MatrixUpIndxCRS[0] = 0;
+	MatrixUpIndxCRS[1] = 4;
+	MatrixUpIndxCRS[2] = 7;
+	MatrixUpIndxCRS[3] = 11;
+	MatrixUpIndxCRS[4] = 14;
+	MatrixUpIndxCRS[5] = 16;
+	MatrixUpIndxCRS[6] = 17;
+	MatrixUpIndxCRS[7] = 19;
+	MatrixUpIndxCRS[8] = 20;
 }
