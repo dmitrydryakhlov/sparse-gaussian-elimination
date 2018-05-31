@@ -44,7 +44,7 @@ int main(int argc, char* argv[]) {
 	//saveBinCRS(argv[2], N, row, col, valCRS);
 	//printf("Finished saving CRS matrix\n");
 
-	/// Mult U*e = by /// L*by = bx
+	/// Mult U*e = y /// L*y = b
 	matrixMultVector(N, e, y, valUCRS, colU, indxU);
 	matrixMultVector(N, y, b, valLCRS, colL, indxL);
 
@@ -82,17 +82,10 @@ int main(int argc, char* argv[]) {
 	/// BlockSolverLow & BlockSolverUp
 	printf("BlockSolverLow started\n");
 	BlockTStart = clock();
-	//blockSolverLowCCS(valLCRS, colL, indxL, valLCCS, LowRowCCS, LowIndxCCS, SNodesLow, NodesNLow, yBlock, bBlock, N);
-	//blockSolverUpCCS(valUCRS, colU, indxU, valUCCS, UpRowCCS, UpIndxCCS, SNodesUp, NodesNUp, xBlock, yBlock, N);
+	blockSolverLowCCS(valLCRS, colL, indxL, valLCCS, LowRowCCS, LowIndxCCS, SNodesLow, NodesNLow, yBlock, bBlock, N);
+	blockSolverUpCCS(valUCRS, colU, indxU, valUCCS, UpRowCCS, UpIndxCCS, SNodesUp, NodesNUp, xBlock, yBlock, N);
 	BlockTFinish = clock();
 	printf("BlockSolverUp finished\n");
-
-	/// CheckBlockResult
-	//printf("\n\n [BlockLow]\n");
-	//long long BlockErrorsL = CheckSolv(N, yBlock, y);
-	//printf("\n BlockLow Errors / N : %d / %d \n", BlockErrorsL, N);
-	//long long BlockErrorsU = CheckSolv(N, xBlock, e);
-	//printf("\n BlockUp Errors / N : %d / %d \n", BlockErrorsU, N);
 
 	///MKL Prepare
 	const long long  MKLn = N;
@@ -165,13 +158,13 @@ int main(int argc, char* argv[]) {
 			BlockErrors, N, (BlockTFinish - BlockTStart) / (float)CLOCKS_PER_SEC * 1000.0f);
 	}
 
-	 /// FreeMem
+	/// FreeMem
 	free(e); free(y); free(b); free(xMKL); free(yMKL); free(bMKL);
 	free(xCRS);	free(yCRS);	free(bCRS);	free(xNode); free(yNode); free(bNode);
 	free(xBlock); free(yBlock);	free(bBlock); free(I); free(IU); free(J);
 	free(JU); free(colU); free(colL); free(valCOO); free(valUCOO); free(valUCRS);
 	free(valLCRS); free(indxU);	free(indxL); free(valLCCS); free(valUCCS);
 	free(UpRowCCS); free(LowRowCCS); free(UpIndxCCS); free(LowIndxCCS);
-	
+
 	return 0;
 }

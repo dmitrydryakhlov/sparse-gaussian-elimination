@@ -88,3 +88,6 @@ void makeBlock8x8UpCRS(double *MatrixUpValCRS, long long *MatrixUpColCRS, long l
 
 void makeBlockMatrix12x12LowCOO(long long * I, long long * J, double * COOVal, long long NzL);
 void makeBlockMatrix12x12UpCOO(long long * I, long long * J, double * COOVal, long long NzL);
+
+void makeBlockMatrix12x12LowCOORandom(long long * I, long long * J, double * COOVal, long long NzL);
+void makeBlockMatrix12x12UpCOORandom(long long * I, long long * J, double * COOVal, long long NzU);

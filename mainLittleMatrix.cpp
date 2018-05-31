@@ -27,13 +27,12 @@ int main(int argc, char* argv[]) {
 
 	mallocVectors(&xCRSLow, &xCRSUp, &xBlockLow, &xBlockUp, &xMKLLow, &xMKLUp, &xNodeLow, &xNodeUp,
 		&bCRSLow, &bCRSUp, &bBlockLow, &bBlockUp, &bMKLLow, &bMKLUp, &bNodeLow, &bNodeUp, N);
-	
+
 	mallocMatrixCOO(&IL, &JL, &valLCOO, nzL);
 	mallocMatrixCOO(&IU, &JU, &valUCOO, nzU);
-	//transposeCOO(nzL, IL, JL, valLCOO, nzU, &IU, &JU, &valUCOO);
 
-	makeBlockMatrix12x12LowCOO(IL, JL, valLCOO, nzL);
-	makeBlockMatrix12x12UpCOO(IU, JU, valUCOO, nzU);
+	makeBlockMatrix12x12LowCOORandom(IL, JL, valLCOO, nzL);
+	makeBlockMatrix12x12UpCOORandom(IU, JU, valUCOO, nzU);
 
 	COOtoCRS(N, nzU, IU, JU, valUCOO, &indxU, &colU, &valUCRS);
 	COOtoCRS(N, nzL, IL, JL, valLCOO, &indxL, &colL, &valLCRS);
@@ -41,14 +40,14 @@ int main(int argc, char* argv[]) {
 	COOtoCCS(N, nzL, IL, JL, valLCOO, &LowIndxCCS, &LowRowCCS, &valLCCS);
 
 	for (long long i = 0; i < N; i++) {
-		bNodeLow[i] = i + 1;
-		bNodeUp[i] = i + 1;
-		bBlockLow[i] = i + 1;
-		bBlockUp[i] = i + 1;
-		bMKLLow[i] = i + 1;
-		bMKLUp[i] = i + 1;
-		bCRSLow[i] = i + 1;
-		bCRSUp[i] = i + 1;
+		bNodeLow[i] = 3 * i + 1;
+		bNodeUp[i] = 3 * i + 1;
+		bBlockLow[i] = 3 * i + 1;
+		bBlockUp[i] = 3 * i + 1;
+		bMKLLow[i] = 3 * i + 1;
+		bMKLUp[i] = 3 * i + 1;
+		bCRSLow[i] = 3 * i + 1;
+		bCRSUp[i] = 3 * i + 1;
 	}
 
 	/// CRS находим y из L*y=bx /// находим х из U*x=y
@@ -70,6 +69,14 @@ int main(int argc, char* argv[]) {
 	/// PrintSuperNodes
 	printf("\n NodesNlow / N : %d/%d \n", NodesNLow - 1, N);
 	printf("\n NodesNUp / N : %d/%d \n", NodesNUp - 1, N);
+
+	for (int i = 0; i < NodesNLow; i++) {
+		printf("%d ", SNodesLow[i]);
+	}printf("\n");
+
+	for (int i = 0; i < NodesNUp; i++) {
+		printf("%d ", SNodesUp[i]);
+	}printf("\n");
 
 	/// NodeSolverLow & NodeSolverUp
 	printf("NodeSolverLow started\n");
@@ -135,7 +142,7 @@ int main(int argc, char* argv[]) {
 	free(xMKLLow); free(xMKLUp); free(bMKLLow);
 	free(xCRSLow);	free(xCRSUp); free(bCRSLow); free(xNodeLow); free(xNodeUp); free(bNodeLow);
 	free(xBlockLow); free(xBlockUp); free(bBlockUp); free(bCRSUp); free(bBlockLow); free(bMKLUp); free(bNodeUp);
-	free(IU);free(JU); free(colU); free(colL);
+	free(IU); free(JU); free(colU); free(colL);
 	free(valUCOO); free(valUCRS);	free(valLCRS); free(indxU);	free(indxL); free(valLCCS); free(valUCCS);
 	free(UpRowCCS); free(LowRowCCS); free(UpIndxCCS); free(LowIndxCCS);
 	return 0;

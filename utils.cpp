@@ -116,7 +116,7 @@ long long COOtoCRS(long long n, long long nz, long long *I, long long *J, double
 void printVectorF(double* b, long long N) {
 	printf("Vector double:\n");
 	for (long long i = 0; i < N; i++) {
-		printf("%.1lf   ", b[i]);
+		printf("%.3lf   ", b[i]);
 	}
 	printf("\n\n");
 }
@@ -389,12 +389,11 @@ void fillDiag(long long * I, long long * J, double * val, long long * Inew, long
 	}
 }
 
-long long CheckSolv(long long n, double * x, double * xCheck)
-{
+long long CheckSolv(long long n, double * x, double * xCheck) {
 	double eps = 0.1;
 	long long i, errors = 0;
 	for (i = 0; i < n; i++) {
-		if (i % 100000 == 0)printf(" i = %d , x[%d] = %lf, xCheck[%d] = %lf, \n\n", i, i, x[i], i, xCheck[i]);
+		// if (i % 100000 == 0)printf(" i = %d , x[%d] = %lf, xCheck[%d] = %lf, \n\n", i, i, x[i], i, xCheck[i]);
 		if (((x[i] - xCheck[i]) > eps) || ((x[i] - xCheck[i]) < -eps)) {
 			errors++;
 		}
@@ -607,9 +606,6 @@ void gaussBackBlockLow(long long startNode, long long finishNode, double * y,
 	long long m = 1;
 	y[startNode] = b[startNode] / valCrsL[indxL[startNode + 1] - 1];
 	for (k = startNode + 1; k < finishNode; k++) {// ןמ סענמךאל םמהא
-		if (k % 100 == 0) {
-			printf("ae! %d  ", k);
-		}
 		sum = 0;
 		index_top = indxL[k + 1] - 1;
 		index_low = indxL[k + 1] - 1 - m;
@@ -627,15 +623,18 @@ void gaussBackBlockUp(long long startNode, long long finishNode, double * x,
 	long long j, k, index_top, index_low;
 	double sum;
 	long long m = 2;
-	x[startNode - 1] = y[startNode - 1] / valCrsU[indxU[startNode] - 1];
+	x[startNode - 1] = y[startNode - 1] / valCrsU[indxU[startNode - 1]];
 	for (k = startNode - 2; k >= finishNode; k--) {// ןמ סענמךאל םמהא
 		sum = 0;
-		index_top = indxU[k] + m; //k-1
+		index_top = indxU[k] + m;
 		index_low = indxU[k] + 1;
 		for (j = index_low; j < index_top; j++) {
 			sum += valCrsU[j] * x[colU[j]];
 		}
-		x[k] = (y[k] - sum) / valCrsU[index_low];
+		if (valCrsU[indxU[k]] == 0) {
+			printf("valCrsU[indxU[%d]] = %lf\n", k, valCrsU[indxU[k]]);
+		}
+		x[k] = (y[k] - sum) / valCrsU[indxU[k]];
 		m++;
 	}
 	return;
@@ -643,45 +642,26 @@ void gaussBackBlockUp(long long startNode, long long finishNode, double * x,
 
 void changeBLowCCS(double *MatrixLowVal, long long *MatrixLowRow, long long *MatrixLowIndx,
 	long long SNodesLowl, long long SNodesLowl_1, long long N, double* x, double* bLow) {
-	double* sum = new double[N];
-	for (int i = 0; i < N; i++) {
-		sum[i] = 0.0f;
-	}
 	for (int j = SNodesLowl; j < SNodesLowl_1; j++) {//ןמ גסול סעמכבאל
 		for (int i = MatrixLowIndx[j]; i < MatrixLowIndx[j + 1]; i++) {//גהמכü סעמכבצא
-			sum[MatrixLowRow[i]] += MatrixLowVal[i] * x[j];
+			bLow[MatrixLowRow[i]] -= MatrixLowVal[i] * x[j];
 		}
 	}
-	for (int i = SNodesLowl; i < N; i++) {
-		bLow[i] -= sum[i];
-	}
-	delete[]sum;
 }
 
 void changeBUpCCS(double *MatrixUpVal, long long *MatrixUpRow, long long *MatrixUpIndx,
 	long long SNodesUpl, long long SNodesUpl_1, long long N, double* x, double* bUp) {
-	double* sum = new double[N];
-	for (int i = 0; i < N; i++) {
-		sum[i] = 0.0f;
-	}
 	for (int j = SNodesUpl_1; j < SNodesUpl; j++) {//ןמ גסול סעמכבאל
 		for (int i = MatrixUpIndx[j]; i < MatrixUpIndx[j + 1]; i++) {//גהמכü סעמכבצא
-			sum[MatrixUpRow[i]] += MatrixUpVal[i] * x[j];
+			bUp[MatrixUpRow[i]] -= MatrixUpVal[i] * x[j];
 		}
 	}
-	for (int i = 0; i < SNodesUpl; i++) {
-		bUp[i] -= sum[i];
-	}
-	delete[]sum;
 }
 
 void blockSolverLowCCS(double *MatrixLowValCRS, long long *MatrixLowColCRS, long long *MatrixLowIndxCRS,
 	double *MatrixLowValCCS, long long *MatrixRowColCCS, long long *MatrixLowIndxCCS,
 	long long* SNodesLow, long long NodesNLow, double* xLow, double* bLow, long long N) {
 	for (long long l = 0; l < NodesNLow - 1; l++) { //ןמ גסול םמהאל
-		if (l % 1000 == 0) {
-			printf("Change done! %d  ", l);
-		}
 		gaussBackBlockLow(SNodesLow[l], SNodesLow[l + 1], xLow, bLow, MatrixLowValCRS, MatrixLowColCRS, MatrixLowIndxCRS);
 		changeBLowCCS(MatrixLowValCCS, MatrixRowColCCS, MatrixLowIndxCCS, SNodesLow[l], SNodesLow[l + 1], N, xLow, bLow);
 	}
@@ -1010,4 +990,84 @@ void makeBlockMatrix12x12UpCOO(long long * I, long long * J, double * COOVal, lo
 	I[33] = 10;	J[33] = 10;	COOVal[33] = 1;
 	I[34] = 10;	J[34] = 11;	COOVal[34] = 1;
 	I[35] = 11;	J[35] = 11;	COOVal[35] = 1;
+}
+
+void makeBlockMatrix12x12LowCOORandom(long long * I, long long * J, double * COOVal, long long NzL) {
+	I[0] = 0;	J[0] = 0;	COOVal[0] = 1;
+	I[1] = 1;	J[1] = 0;	COOVal[1] = 2;
+	I[2] = 1;	J[2] = 1;	COOVal[2] = 3;
+	I[3] = 2;	J[3] = 2;	COOVal[3] = 4;
+	I[4] = 3;	J[4] = 0;	COOVal[4] = 5;
+	I[5] = 3;	J[5] = 1;	COOVal[5] = 6;
+	I[6] = 3;	J[6] = 3;	COOVal[6] = 7;
+	I[7] = 4;	J[7] = 0;	COOVal[7] = 8;
+	I[8] = 4;	J[8] = 1;	COOVal[8] = 9;
+	I[9] = 4;	J[9] = 3;	COOVal[9] = 10;
+	I[10] = 4;	J[10] = 4;	COOVal[10] = 11;
+	I[11] = 5;	J[11] = 3;	COOVal[11] = 12;
+	I[12] = 5;	J[12] = 4;	COOVal[12] = 13;
+	I[13] = 5;	J[13] = 5;	COOVal[13] = 14;
+	I[14] = 6;	J[14] = 6;	COOVal[14] = 15;
+	I[15] = 7;	J[15] = 0;	COOVal[15] = 16;
+	I[16] = 7;	J[16] = 1;	COOVal[16] = 17;
+	I[17] = 7;	J[17] = 3;	COOVal[17] = 18;
+	I[18] = 7;	J[18] = 4;	COOVal[18] = 19;
+	I[19] = 7;	J[19] = 5;	COOVal[19] = 20;
+	I[20] = 7;	J[20] = 7;	COOVal[20] = 21;
+	I[21] = 8;	J[21] = 8;	COOVal[21] = 22;
+	I[22] = 9;	J[22] = 3;	COOVal[22] = 23;
+	I[23] = 9;	J[23] = 4;	COOVal[23] = 24;
+	I[24] = 9;	J[24] = 5;	COOVal[24] = 25;
+	I[25] = 9;	J[25] = 6;	COOVal[25] = 26;
+	I[26] = 9;	J[26] = 8;	COOVal[26] = 27;
+	I[27] = 9;	J[27] = 9;	COOVal[27] = 28;
+	I[28] = 10;	J[28] = 0;	COOVal[28] = 29;
+	I[29] = 10;	J[29] = 1;	COOVal[29] = 30;
+	I[30] = 10;	J[30] = 6;	COOVal[30] = 31;
+	I[31] = 10;	J[31] = 8;	COOVal[31] = 32;
+	I[32] = 10;	J[32] = 9;	COOVal[32] = 33;
+	I[33] = 10;	J[33] = 10;	COOVal[33] = 34;
+	I[34] = 11;	J[34] = 8;	COOVal[34] = 35;
+	I[35] = 11;	J[35] = 9;	COOVal[35] = 36;
+	I[36] = 11;	J[36] = 10;	COOVal[36] = 37;
+	I[37] = 11;	J[37] = 11;	COOVal[37] = 38;
+}
+
+void makeBlockMatrix12x12UpCOORandom(long long * I, long long * J, double * COOVal, long long NzU) {
+	I[0] = 0;	J[0] = 0;	COOVal[0] = 1;
+	I[1] = 0;	J[1] = 1;	COOVal[1] = 2;
+	I[2] = 0;	J[2] = 5;	COOVal[2] = 3;
+	I[3] = 0;	J[3] = 6;	COOVal[3] = 4;
+	I[4] = 0;	J[4] = 7;	COOVal[4] = 5;
+	I[5] = 1;	J[5] = 1;	COOVal[5] = 6;
+	I[6] = 1;	J[6] = 3;	COOVal[6] = 7;
+	I[7] = 1;	J[7] = 4;	COOVal[7] = 8;
+	I[8] = 2;	J[8] = 2;	COOVal[8] = 9;
+	I[9] = 2;	J[9] = 8;	COOVal[9] = 10;
+	I[10] = 2;	J[10] = 9;	COOVal[10] = 11;
+	I[11] = 2;	J[11] = 10;	COOVal[11] = 12;
+	I[12] = 2;	J[12] = 11;	COOVal[12] = 13;
+	I[13] = 3;	J[13] = 3;	COOVal[13] = 14;
+	I[14] = 3;	J[14] = 4;	COOVal[14] = 15;
+	I[15] = 4;	J[15] = 4;	COOVal[15] = 16;
+	I[16] = 5;	J[16] = 5;	COOVal[16] = 17;
+	I[17] = 5;	J[17] = 6;	COOVal[17] = 18;
+	I[18] = 5;	J[18] = 7;	COOVal[18] = 19;
+	I[19] = 6;	J[19] = 6;	COOVal[19] = 20;
+	I[20] = 6;	J[20] = 7;	COOVal[20] = 21;
+	I[21] = 6;	J[21] = 8;	COOVal[21] = 22;
+	I[22] = 6;	J[22] = 9;	COOVal[22] = 23;
+	I[23] = 6;	J[23] = 10;	COOVal[23] = 24;
+	I[24] = 6;	J[24] = 11;	COOVal[24] = 25;
+	I[25] = 7;	J[25] = 7;	COOVal[25] = 26;
+	I[26] = 8;	J[26] = 8;	COOVal[26] = 27;
+	I[27] = 8;	J[27] = 9;	COOVal[27] = 28;
+	I[28] = 8;	J[28] = 10;	COOVal[28] = 29;
+	I[29] = 8;	J[29] = 11;	COOVal[29] = 30;
+	I[30] = 9;	J[30] = 9;	COOVal[30] = 31;
+	I[31] = 9;	J[31] = 10;	COOVal[31] = 32;
+	I[32] = 9;	J[32] = 11;	COOVal[32] = 33;
+	I[33] = 10;	J[33] = 10;	COOVal[33] = 34;
+	I[34] = 10;	J[34] = 11;	COOVal[34] = 35;
+	I[35] = 11;	J[35] = 11;	COOVal[35] = 36;
 }
