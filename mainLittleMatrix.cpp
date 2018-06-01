@@ -21,21 +21,22 @@ int main(int argc, char* argv[]) {
 	long long *SNodesLow, *SNodesUp, NodesNLow, NodesNUp;
 	double *xCRSUp, *xBlockUp, *xMKLUp, *xNodeUp, *xCRSLow, *xBlockLow, *xMKLLow, *xNodeLow;
 	double *bMKLLow, *bCRSLow, *bNodeLow, *bBlockLow, *bMKLUp, *bCRSUp, *bNodeUp, *bBlockUp;
+	long long *fullRowL, *fullRowU;
 
-	long long N = 200000;
-	long long blockSizeU = 1000;
-	long long blockSizeL = 1000;
+	long long N = 12;
+	long long blockSizeU = 5;
+	long long blockSizeL = 5;
 
-	mallocVectors(&xCRSLow, &xCRSUp, &xBlockLow, &xBlockUp, &xMKLLow, &xMKLUp, &xNodeLow, &xNodeUp,
-		&bCRSLow, &bCRSUp, &bBlockLow, &bBlockUp, &bMKLLow, &bMKLUp, &bNodeLow, &bNodeUp, N);
+	//mallocVectors(&xCRSLow, &xCRSUp, &xBlockLow, &xBlockUp, &xMKLLow, &xMKLUp, &xNodeLow, &xNodeUp,
+	//	&bCRSLow, &bCRSUp, &bBlockLow, &bBlockUp, &bMKLLow, &bMKLUp, &bNodeLow, &bNodeUp, N);
 
-	long long nzL = calcNzL(N, blockSizeL);
-	long long nzU = calcNzU(N, blockSizeU);
+	long long nzL = calcNzL(N, blockSizeL, &fullRowL);
+	long long nzU = calcNzU(N, blockSizeU, &fullRowU);
 
 	mallocMatrixCOO(&IL, &JL, &valLCOO, nzL);
 	mallocMatrixCOO(&IU, &JU, &valUCOO, nzU);
-	generateBigBlockMatrixL(IL, JL, valLCOO, nzL, N, blockSizeL);
-	generateBigBlockMatrixU(IU, JU, valUCOO, nzU, N, blockSizeU);
+	generateBigBlockMatrixL(IL, JL, valLCOO, nzL, N, blockSizeL, fullRowL);
+	generateBigBlockMatrixU(IU, JU, valUCOO, nzU, N, blockSizeU, fullRowU);
 
 	//makeBlockMatrix12x12LowCOORandom(IL, JL, valLCOO, nzL);
 	//makeBlockMatrix12x12UpCOORandom(IU, JU, valUCOO, nzU);
@@ -50,12 +51,12 @@ int main(int argc, char* argv[]) {
 	free(valLCOO);
 	free(valUCOO);
 
-	if (readMTX("myMatrix_12x12L.mtx", &IL, &JL, &valLCOO, &N, &N, &nzL) != 0)
-		exit(0);
-	if (readMTX("myMatrix_12x12U.mtx", &IU, &JU, &valUCOO, &N, &N, &nzU) != 0)
-		exit(0);
+	//if (readMTX("myMatrix_12x12L.mtx", &IL, &JL, &valLCOO, &N, &N, &nzL) != 0)
+	//	exit(0);
+	//if (readMTX("myMatrix_12x12U.mtx", &IU, &JU, &valUCOO, &N, &N, &nzU) != 0)
+	//	exit(0);
 
-	COOtoCRS(N, nzU, IU, JU, valUCOO, &indxU, &colU, &valUCRS);
+	/*COOtoCRS(N, nzU, IU, JU, valUCOO, &indxU, &colU, &valUCRS);
 	COOtoCRS(N, nzL, IL, JL, valLCOO, &indxL, &colL, &valLCRS);
 	COOtoCCS(N, nzU, IU, JU, valUCOO, &UpIndxCCS, &UpRowCCS, &valUCCS);
 	COOtoCCS(N, nzL, IL, JL, valLCOO, &LowIndxCCS, &LowRowCCS, &valLCCS);
@@ -161,12 +162,12 @@ int main(int argc, char* argv[]) {
 	//		&bCRSLow, &bCRSUp, &bBlockLow, &bBlockUp, &bMKLLow, &bMKLUp, &bNodeLow, &bNodeUp, N);
 
 		//free(xMKLLow); free(xMKLUp); free(bMKLLow);
-	free(xCRSLow);	free(xCRSUp); free(bCRSLow); free(xNodeLow); free(xNodeUp); free(bNodeLow);
-	free(xBlockLow); free(xBlockUp); free(bBlockUp); free(bCRSUp); free(bBlockLow);
+	//free(xCRSLow);	free(xCRSUp); free(bCRSLow); free(xNodeLow); free(xNodeUp); free(bNodeLow);
+	//free(xBlockLow); free(xBlockUp); free(bBlockUp); free(bCRSUp); free(bBlockLow);
 	//free(bMKLUp);
-	free(bNodeUp);
-	free(IU); free(JU); free(colU); free(colL);
-	free(valUCOO); free(valUCRS);	free(valLCRS); free(indxU);	free(indxL); free(valLCCS); free(valUCCS);
-	free(UpRowCCS); free(LowRowCCS); free(UpIndxCCS); free(LowIndxCCS);
+	//free(bNodeUp);
+	//free(IU); free(JU); free(colU); free(colL);
+	//free(valUCOO); free(valUCRS);	free(valLCRS); free(indxU);	free(indxL); free(valLCCS); free(valUCCS);
+	//free(UpRowCCS); free(LowRowCCS); free(UpIndxCCS); free(LowIndxCCS);
 	return 0;
 }

@@ -1097,7 +1097,7 @@ void makeBlockMatrix12x12UpCOORandom(long long * I, long long * J, double * COOV
 }
 
 void generateBigBlockMatrixL(long long * I, long long * J, double * COOVal, long long NzL, long long N,
-	long long blockSize) {
+	long long blockSize, long long* fullRowL) {
 	for (long long i = 0; i < NzL; i++) {
 		COOVal[i] = 1;
 	}
@@ -1109,49 +1109,76 @@ void generateBigBlockMatrixL(long long * I, long long * J, double * COOVal, long
 	long long k = 0;
 	for (long long blockI = 0; blockI < blockCount.quot; blockI++) {
 		for (long long i = 0; i < blockSize; i++) {
-			for (long long j = 0; j <= i; j++) {
-				I[k] = blockI * blockSize + i;
-				J[k] = blockI * blockSize + j;
-				k++;
+			if (fullRowL[i + blockI*blockSize] == 1) {
+				for (long long j = 0; j <= blockI * blockSize + i; j++) {
+					I[k] = blockI * blockSize + i;
+					J[k] = j;
+					k++;
+				}
+			}
+			else {
+				for (long long j = 0; j <= i; j++) {
+					I[k] = blockI * blockSize + i;
+					J[k] = blockI * blockSize + j;
+					k++;
+				}
 			}
 		}
 	}
 	for (long long i = N - blockCount.rem; i < N; i++) {
-		for (long long j = N - blockCount.rem; j <= i; j++) {
-			I[k] = i;
-			J[k] = j;
-			k++;
+		if (fullRowL[i] == 1) {
+			for (long long j = 0; j <= i; j++) {
+				I[k] = i;
+				J[k] = j;
+				k++;
+			}
+		}
+		else {
+			for (long long j = N - blockCount.rem; j <= i; j++) {
+				I[k] = i;
+				J[k] = j;
+				k++;
+			}
 		}
 	}
 
 	for (int i = 0; i < k; i++) {
-		//printf("[%d]: %d   %d  \n", i, I[i], J[i]);
+		printf("[%d]: %d   %d  \n", i, I[i], J[i]);
 	}
 	return;
 }
 
 void generateBigBlockMatrixU(long long * I, long long * J, double * COOVal,
-	long long NzU, long long N, long long blockSize) {
+	long long NzU, long long N, long long blockSize, long long* fullRowU) {
 
 	for (long long i = 0; i < NzU; i++) {
 		COOVal[i] = 1;
 	}
 
 	lldiv_t blockCount = div(N, blockSize);
-	
+
 	long long k = 0;
 	for (long long blockI = 0; blockI < blockCount.quot; blockI++) {
 		for (long long i = 0; i < blockSize; i++) {
-			for (long long j = i; j < blockSize; j++) {
-				I[k] = blockI * blockSize + i;
-				J[k] = blockI * blockSize + j;
-				k++;
+			if (fullRowU[i + blockI*blockSize] == 1) {
+				for (long long j = i + blockI*blockSize; j < N; j++) {
+					I[k] = blockI * blockSize + i;
+					J[k] = j;
+					k++;
+				}
+			}
+			else {
+				for (long long j = i; j < blockSize; j++) {
+					I[k] = blockI * blockSize + i;
+					J[k] = blockI * blockSize + j;
+					k++;
+				}
 			}
 		}
 	}
 
 	for (long long i = N - blockCount.rem; i < N; i++) {
-		for (long long j = N - blockCount.rem; j <= i; j++) {
+		for (long long j = i; j < N; j++) {
 			I[k] = i;
 			J[k] = j;
 			k++;
@@ -1159,46 +1186,85 @@ void generateBigBlockMatrixU(long long * I, long long * J, double * COOVal,
 	}
 
 	for (int i = 0; i < k; i++) {
-		//printf("[%d]: %d   %d  \n", i, I[i], J[i]);
+		printf("[%d]: %d   %d  \n", i, I[i], J[i]);
 	}
 	return;
 }
 
-long long calcNzL(long long N, long long blockSizeL)
+long long calcNzL(long long N, long long blockSizeL, long long **fullRowL)
 {
-	lldiv_t blockCount = div(N, blockSizeL);
+	(*fullRowL) = (long long *)malloc(N * sizeof(long long));
 
+	for (int i = 0; i < N; i++) {
+		(*fullRowL)[i] = rand() % 2;
+	}
+	(*fullRowL)[6] = 1;
+	for (int i = 0; i < N; i++) {
+		printf("FullRowL[%d] = %d\n", i, (*fullRowL)[i]);
+	}
+
+	lldiv_t blockCount = div(N, blockSizeL);
 	long long k = 0;
 	for (long long blockI = 0; blockI < blockCount.quot; blockI++) {
 		for (long long i = 0; i < blockSizeL; i++) {
-			for (long long j = 0; j <= i; j++) {
-				k++;
+			if ((*fullRowL)[i + blockI*blockSizeL] == 1) {
+				for (long long j = 0; j <= blockI * blockSizeL + i; j++) {
+					k++;
+				}
+			}
+			else {
+				for (long long j = 0; j <= i; j++) {
+					k++;
+				}
 			}
 		}
 	}
 	for (long long i = N - blockCount.rem; i < N; i++) {
-		for (long long j = N - blockCount.rem; j <= i; j++) {
-			k++;
+		if ((*fullRowL)[i] == 1) {
+			for (long long j = 0; j <= i; j++) {
+				k++;
+			}
+		}
+		else {
+			for (long long j = N - blockCount.rem; j <= i; j++) {
+				k++;
+			}
 		}
 	}
 	return k;
 }
 
-long long calcNzU(long long N, long long blockSizeU)
-{
+long long calcNzU(long long N, long long blockSizeU, long long **fullRowU) {
 	lldiv_t blockCount = div(N, blockSizeU);
+
+	(*fullRowU) = (long long *)malloc(N * sizeof(long long));
+
+	for (int i = 0; i < N; i++) {
+		(*fullRowU)[i] = rand() % 2;
+	}
+	(*fullRowU)[6] = 1;
+	for (int i = 0; i < N; i++) {
+		printf("FullRowU[%d] = %d\n", i, (*fullRowU)[i]);
+	}
 
 	long long k = 0;
 	for (long long blockI = 0; blockI < blockCount.quot; blockI++) {
 		for (long long i = 0; i < blockSizeU; i++) {
-			for (long long j = i; j < blockSizeU; j++) {
-				k++;
+			if (fullRowU[i + blockI*blockSizeU]) {
+				for (long long j = i; j < N; j++) {
+					k++;
+				}
+			}
+			else {
+				for (long long j = i; j < blockSizeU; j++) {
+					k++;
+				}
 			}
 		}
 	}
 
 	for (long long i = N - blockCount.rem; i < N; i++) {
-		for (long long j = N - blockCount.rem; j <= i; j++) {
+		for (long long j = i; j < N; j++) {
 			k++;
 		}
 	}

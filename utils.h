@@ -94,8 +94,8 @@ void makeBlockMatrix12x12UpCOO(long long * I, long long * J, double * COOVal, lo
 void makeBlockMatrix12x12LowCOORandom(long long * I, long long * J, double * COOVal, long long NzL);
 void makeBlockMatrix12x12UpCOORandom(long long * I, long long * J, double * COOVal, long long NzU);
 
-void generateBigBlockMatrixL(long long * I, long long * J, double * COOVal, long long NzL, long long N, long long blockSize);
-void generateBigBlockMatrixU(long long * I, long long * J, double * COOVal, long long NzU, long long N, long long blockSize);
+void generateBigBlockMatrixL(long long * I, long long * J, double * COOVal, long long NzL, long long N, long long blockSize, long long* fullRowL);
+void generateBigBlockMatrixU(long long * I, long long * J, double * COOVal, long long NzU, long long N, long long blockSize, long long* fullRowU);
 
-long long calcNzL(long long N, long long blockSizeL);
-long long calcNzU(long long N, long long blockSizeU);
+long long calcNzL(long long N, long long blockSizeL, long long **fullRowL);
+long long calcNzU(long long N, long long blockSizeU, long long **fullRowU);
