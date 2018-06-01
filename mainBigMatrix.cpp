@@ -23,15 +23,22 @@ int main(int argc, char* argv[]) {
 	double *b, *bMKL, *bCRS, *bNode, *bBlock, *useless;
 	long long N, M, nz, nzU, nzL;
 
-	if (readMTX(argv[1], &I, &J, &valCOO, &M, &N, &nz) != 0)
+	//if (readMTX(argv[1], &I, &J, &valCOO, &M, &N, &nz) != 0)
+	//	exit(0);
+
+	if (readMTX(argv[1], &IL, &JL, &valLCOO, &M, &N, &nzL) != 0)
 		exit(0);
-	checkAndFillDiag(&I, &J, nz, N, &valCOO);
+
+	if (readMTX(argv[2], &IU, &JU, &valUCOO, &M, &N, &nzU) != 0)
+		exit(0);
+
+	//checkAndFillDiag(&I, &J, nz, N, &valCOO);
 	mallocVectors(&e, &y, &b, &xCRS, &yCRS, &bCRS, &xMKL, &yMKL,
 		&bMKL, &xNode, &yNode, &bNode, &xBlock, &yBlock, &bBlock, &useless, N);
 	randVector(e, N);
-	cutUpperTriangleCOO(nz, I, J, valCOO, &nzL, &IL, &JL, &valLCOO);
+	//cutUpperTriangleCOO(nz, I, J, valCOO, &nzL, &IL, &JL, &valLCOO);
 	printf("Finished cutting coordinate matrix\n");
-	transposeCOO(nzL, IL, JL, valLCOO, nzU, &IU, &JU, &valUCOO);
+	//transposeCOO(nzL, IL, JL, valLCOO, nzU, &IU, &JU, &valUCOO);
 
 
 	printf("nzU = %d\n nzL = %d\n N = %d\n\n", nzU, nzL, N);
@@ -105,7 +112,7 @@ int main(int argc, char* argv[]) {
 	MKLTFinish = clock();
 
 	/// CheckResult
-	printf("\n Size: %d x %d , nz = %d , nzL = %d , nzU = %d\n", N, N, nz, nzL, nzU);
+	printf("\n Size: %d x %d , nzL = %d , nzU = %d\n", N, N, nzL, nzU);
 	printf("\n\n [CRS]\n");
 	long long CRSerrors = CheckSolv(N, e, xCRS);
 	printf("[MKL]\n");
@@ -161,8 +168,13 @@ int main(int argc, char* argv[]) {
 	/// FreeMem
 	free(e); free(y); free(b); free(xMKL); free(yMKL); free(bMKL);
 	free(xCRS);	free(yCRS);	free(bCRS);	free(xNode); free(yNode); free(bNode);
-	free(xBlock); free(yBlock);	free(bBlock); free(I); free(IU); free(J);
-	free(JU); free(colU); free(colL); free(valCOO); free(valUCOO); free(valUCRS);
+	free(xBlock); free(yBlock);	free(bBlock);
+	//free(I); 
+	free(IU); 
+	//free(J);
+	free(JU); free(colU); free(colL); 
+	//free(valCOO);
+	free(valUCOO); free(valUCRS);
 	free(valLCRS); free(indxU);	free(indxL); free(valLCCS); free(valUCCS);
 	free(UpRowCCS); free(LowRowCCS); free(UpIndxCCS); free(LowIndxCCS);
 

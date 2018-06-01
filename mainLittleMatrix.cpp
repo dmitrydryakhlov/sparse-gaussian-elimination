@@ -21,18 +21,39 @@ int main(int argc, char* argv[]) {
 	long long *SNodesLow, *SNodesUp, NodesNLow, NodesNUp;
 	double *xCRSUp, *xBlockUp, *xMKLUp, *xNodeUp, *xCRSLow, *xBlockLow, *xMKLLow, *xNodeLow;
 	double *bMKLLow, *bCRSLow, *bNodeLow, *bBlockLow, *bMKLUp, *bCRSUp, *bNodeUp, *bBlockUp;
-	long long N = 12;
-	long long nzU = 36;
-	long long nzL = 38;
+
+	long long N = 200000;
+	long long blockSizeU = 1000;
+	long long blockSizeL = 1000;
 
 	mallocVectors(&xCRSLow, &xCRSUp, &xBlockLow, &xBlockUp, &xMKLLow, &xMKLUp, &xNodeLow, &xNodeUp,
 		&bCRSLow, &bCRSUp, &bBlockLow, &bBlockUp, &bMKLLow, &bMKLUp, &bNodeLow, &bNodeUp, N);
 
+	long long nzL = calcNzL(N, blockSizeL);
+	long long nzU = calcNzU(N, blockSizeU);
+
 	mallocMatrixCOO(&IL, &JL, &valLCOO, nzL);
 	mallocMatrixCOO(&IU, &JU, &valUCOO, nzU);
+	generateBigBlockMatrixL(IL, JL, valLCOO, nzL, N, blockSizeL);
+	generateBigBlockMatrixU(IU, JU, valUCOO, nzU, N, blockSizeU);
 
-	makeBlockMatrix12x12LowCOORandom(IL, JL, valLCOO, nzL);
-	makeBlockMatrix12x12UpCOORandom(IU, JU, valUCOO, nzU);
+	//makeBlockMatrix12x12LowCOORandom(IL, JL, valLCOO, nzL);
+	//makeBlockMatrix12x12UpCOORandom(IU, JU, valUCOO, nzU);
+
+	mm_write_mtx_crd("myMatrix_1Mx1ML.mtx", N, N, nzL, IL, JL, valLCOO);
+	mm_write_mtx_crd("myMatrix_1Mx1MU.mtx", N, N, nzU, IU, JU, valUCOO);
+
+	free(IL);
+	free(JL);
+	free(IU);
+	free(JU);
+	free(valLCOO);
+	free(valUCOO);
+
+	if (readMTX("myMatrix_12x12L.mtx", &IL, &JL, &valLCOO, &N, &N, &nzL) != 0)
+		exit(0);
+	if (readMTX("myMatrix_12x12U.mtx", &IU, &JU, &valUCOO, &N, &N, &nzU) != 0)
+		exit(0);
 
 	COOtoCRS(N, nzU, IU, JU, valUCOO, &indxU, &colU, &valUCRS);
 	COOtoCRS(N, nzL, IL, JL, valLCOO, &indxL, &colL, &valLCRS);
@@ -105,7 +126,7 @@ int main(int argc, char* argv[]) {
 	}
 	/// /////////////////////////////////////////////////////////////////////////
 	/// MKL /////////////////////////////////////////////////////////////////////
-	const long long  MKLn = N;
+	/*const long long  MKLn = N;
 	long long	MKLerror = 0;
 	const long long MKLn_short = MKLn;
 	long long* colU_short;
@@ -122,8 +143,8 @@ int main(int argc, char* argv[]) {
 	printf("/n%d\n", N);
 	printf("MKL error: %lld\n", MKLerror);
 	printf("\n Size: %d x %d , nzL = %d , nzU = %d\n", N, N, nzL, nzU);
-
-	printf("\n\n [CRS]\n");
+	*/
+	/*printf("\n\n [CRS]\n");
 	printVectorF(xCRSLow, N);
 	printVectorF(xCRSUp, N);
 	printf("[Node]\n");
@@ -134,14 +155,16 @@ int main(int argc, char* argv[]) {
 	printVectorF(xBlockUp, N);
 	printf("[MKL]\n");
 	printVectorF(xMKLLow, N);
-	printVectorF(xMKLUp, N);
+	printVectorF(xMKLUp, N);*/
 
-	mallocVectors(&xCRSLow, &xCRSUp, &xBlockLow, &xBlockUp, &xMKLLow, &xMKLUp, &xNodeLow, &xNodeUp,
-		&bCRSLow, &bCRSUp, &bBlockLow, &bBlockUp, &bMKLLow, &bMKLUp, &bNodeLow, &bNodeUp, N);
+	//	mallocVectors(&xCRSLow, &xCRSUp, &xBlockLow, &xBlockUp, &xMKLLow, &xMKLUp, &xNodeLow, &xNodeUp,
+	//		&bCRSLow, &bCRSUp, &bBlockLow, &bBlockUp, &bMKLLow, &bMKLUp, &bNodeLow, &bNodeUp, N);
 
-	free(xMKLLow); free(xMKLUp); free(bMKLLow);
+		//free(xMKLLow); free(xMKLUp); free(bMKLLow);
 	free(xCRSLow);	free(xCRSUp); free(bCRSLow); free(xNodeLow); free(xNodeUp); free(bNodeLow);
-	free(xBlockLow); free(xBlockUp); free(bBlockUp); free(bCRSUp); free(bBlockLow); free(bMKLUp); free(bNodeUp);
+	free(xBlockLow); free(xBlockUp); free(bBlockUp); free(bCRSUp); free(bBlockLow);
+	//free(bMKLUp);
+	free(bNodeUp);
 	free(IU); free(JU); free(colU); free(colL);
 	free(valUCOO); free(valUCRS);	free(valLCRS); free(indxU);	free(indxL); free(valLCCS); free(valUCCS);
 	free(UpRowCCS); free(LowRowCCS); free(UpIndxCCS); free(LowIndxCCS);

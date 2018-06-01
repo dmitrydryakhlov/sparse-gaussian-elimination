@@ -1,41 +1,8 @@
 #include "utils.h"
 #include <omp.h>
-long long readMTX(const char * fileName, long long ** I, long long ** J, double ** val, long long * M, long long * N, long long * nz)
-{
-	FILE *f;
-	long long i;
-	long long ret_code;
-
-	if ((f = fopen(fileName, "r")) == NULL) {
-		printf("Can't open file %s\n", fileName);
-		return 1;
-	}
-	else
-		printf("Matrix: %s\n", fileName);
-
-	if ((ret_code = mm_read_mtx_crd_size(f, M, N, nz)) != 0)
-		return 1;
-
-	(*I) = (long long *)malloc((*nz) * sizeof(long long));
-	(*J) = (long long *)malloc((*nz) * sizeof(long long));
-	(*val) = (double *)malloc((*nz) * sizeof(double));
-
-	for (i = 0; i < (*nz); i++)
-	{
-		int x, y;
-		double value;
-		fscanf(f, "%d %d %lf\n", &x, &y, &value);
-		(*I)[i] = (long long)(x - 1);
-		(*J)[i] = (long long)(y - 1);
-		(*val)[i] = (long long)value;
-
-		//fscanf(f, "%d %d %lg\n", &(*I)[i], &(*J)[i], &(*val)[i]);
-		//(*I)[i]--;  /* adjust from 1-based to 0-based */
-		//(*J)[i]--;
-	}
-	if (f != stdin) fclose(f);
-	return 0;
-}
+#include <string.h>
+#include <stdlib.h>
+#include <cstdlib>
 
 long long mm_read_mtx_crd_size(FILE *f, long long *M, long long *N, long long *nz)
 {
@@ -66,7 +33,64 @@ long long mm_read_mtx_crd_size(FILE *f, long long *M, long long *N, long long *n
 		return 0;
 }
 
-long long COOtoCRS(long long n, long long nz, long long *I, long long *J, double *valCOO, long long **indx, long long **col, double **valCrs)
+long long mm_write_mtx_crd_size(FILE *f, int M, int N, int nz) {
+	if (fprintf(f, "%d %d %d\n", M, N, nz) != 3)
+		return 1;
+	else
+		return 0;
+}
+
+long long readMTX(const char * fileName, long long ** I, long long ** J, double ** val, long long * M, long long * N, long long * nz)
+{
+	FILE *f;
+	long long i;
+	long long ret_code;
+
+	if ((f = fopen(fileName, "r")) == NULL) {
+		printf("Can't open file %s\n", fileName);
+		return 1;
+	}
+	else
+		printf("Matrix: %s\n", fileName);
+
+	if ((ret_code = mm_read_mtx_crd_size(f, M, N, nz)) != 0)
+		return 1;
+
+	(*I) = (long long *)malloc((*nz) * sizeof(long long));
+	(*J) = (long long *)malloc((*nz) * sizeof(long long));
+	(*val) = (double *)malloc((*nz) * sizeof(double));
+
+	for (i = 0; i < (*nz); i++) {
+		int x, y;
+		double value;
+		fscanf(f, "%d %d %lf\n", &x, &y, &value);
+		(*I)[i] = (long long)(x - 1);
+		(*J)[i] = (long long)(y - 1);
+		(*val)[i] = (long long)value;
+	}
+	if (f != stdin) fclose(f);
+	return 0;
+}
+
+long long mm_write_mtx_crd(char fname[], long long M, long long N, long long nz,
+	long long I[], long long J[], double val[]) {
+	FILE *f;
+	long long i;
+
+	if ((f = fopen(fname, "w")) == NULL)
+		return 1;
+
+	fprintf(f, "%d %d %d\n", M, N, nz);
+
+	for (i = 0; i < nz; i++)
+		fprintf(f, "%d %d %20.16g\n", I[i] + 1, J[i] + 1, val[i]);
+
+	if (f != stdout) fclose(f);
+	return 0;
+}
+
+long long COOtoCRS(long long n, long long nz, long long *I, long long *J,
+	double *valCOO, long long **indx, long long **col, double **valCrs)
 {
 	long long i;
 	long long *places;
@@ -1070,4 +1094,113 @@ void makeBlockMatrix12x12UpCOORandom(long long * I, long long * J, double * COOV
 	I[33] = 10;	J[33] = 10;	COOVal[33] = 34;
 	I[34] = 10;	J[34] = 11;	COOVal[34] = 35;
 	I[35] = 11;	J[35] = 11;	COOVal[35] = 36;
+}
+
+void generateBigBlockMatrixL(long long * I, long long * J, double * COOVal, long long NzL, long long N,
+	long long blockSize) {
+	for (long long i = 0; i < NzL; i++) {
+		COOVal[i] = 1;
+	}
+
+	lldiv_t blockCount = div(N, blockSize);
+	// lldiv_t.quot - целая часть
+	// lldiv_t.rem - остаток
+
+	long long k = 0;
+	for (long long blockI = 0; blockI < blockCount.quot; blockI++) {
+		for (long long i = 0; i < blockSize; i++) {
+			for (long long j = 0; j <= i; j++) {
+				I[k] = blockI * blockSize + i;
+				J[k] = blockI * blockSize + j;
+				k++;
+			}
+		}
+	}
+	for (long long i = N - blockCount.rem; i < N; i++) {
+		for (long long j = N - blockCount.rem; j <= i; j++) {
+			I[k] = i;
+			J[k] = j;
+			k++;
+		}
+	}
+
+	for (int i = 0; i < k; i++) {
+		//printf("[%d]: %d   %d  \n", i, I[i], J[i]);
+	}
+	return;
+}
+
+void generateBigBlockMatrixU(long long * I, long long * J, double * COOVal,
+	long long NzU, long long N, long long blockSize) {
+
+	for (long long i = 0; i < NzU; i++) {
+		COOVal[i] = 1;
+	}
+
+	lldiv_t blockCount = div(N, blockSize);
+	
+	long long k = 0;
+	for (long long blockI = 0; blockI < blockCount.quot; blockI++) {
+		for (long long i = 0; i < blockSize; i++) {
+			for (long long j = i; j < blockSize; j++) {
+				I[k] = blockI * blockSize + i;
+				J[k] = blockI * blockSize + j;
+				k++;
+			}
+		}
+	}
+
+	for (long long i = N - blockCount.rem; i < N; i++) {
+		for (long long j = N - blockCount.rem; j <= i; j++) {
+			I[k] = i;
+			J[k] = j;
+			k++;
+		}
+	}
+
+	for (int i = 0; i < k; i++) {
+		//printf("[%d]: %d   %d  \n", i, I[i], J[i]);
+	}
+	return;
+}
+
+long long calcNzL(long long N, long long blockSizeL)
+{
+	lldiv_t blockCount = div(N, blockSizeL);
+
+	long long k = 0;
+	for (long long blockI = 0; blockI < blockCount.quot; blockI++) {
+		for (long long i = 0; i < blockSizeL; i++) {
+			for (long long j = 0; j <= i; j++) {
+				k++;
+			}
+		}
+	}
+	for (long long i = N - blockCount.rem; i < N; i++) {
+		for (long long j = N - blockCount.rem; j <= i; j++) {
+			k++;
+		}
+	}
+	return k;
+}
+
+long long calcNzU(long long N, long long blockSizeU)
+{
+	lldiv_t blockCount = div(N, blockSizeU);
+
+	long long k = 0;
+	for (long long blockI = 0; blockI < blockCount.quot; blockI++) {
+		for (long long i = 0; i < blockSizeU; i++) {
+			for (long long j = i; j < blockSizeU; j++) {
+				k++;
+			}
+		}
+	}
+
+	for (long long i = N - blockCount.rem; i < N; i++) {
+		for (long long j = N - blockCount.rem; j <= i; j++) {
+			k++;
+		}
+	}
+	return k;
 }

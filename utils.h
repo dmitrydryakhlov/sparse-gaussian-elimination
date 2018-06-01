@@ -7,7 +7,9 @@
 
 
 long long readMTX(const char* fileName, long long **I, long long **J, double **val, long long *M, long long *N, long long *nz);
+long long mm_write_mtx_crd(char fname[], long long M, long long N, long long nz, long long I[], long long J[], double val[]);
 long long mm_read_mtx_crd_size(FILE *f, long long *M, long long *N, long long *nz);
+long long mm_write_mtx_crd_size(FILE *f, int M, int N, int nz);
 long long COOtoCRS(long long n, long long nz, long long *I, long long *J, double *valCOO, long long **indx, long long **col, double **valCrs);
 long long saveBinCRS(const char* fileName, long long n, long long *row, long long *col, double *val);
 long long cutLowerTriangleCOO(long long nz, long long *I, long long *J, double *val, long long *nzU, long long **IU, long long **JU, double **valU);
@@ -40,7 +42,7 @@ void mallocVectors(double** x, double** y, double** b,
 	double** xNode, double** yNode, double** bNode,
 	double** xBlock, double** yBlock, double** bBlock,
 	double** bNodeUp, long long N);
-void randVector(double* b, long long N); 
+void randVector(double* b, long long N);
 void MKLPrepare(long long ** colU_short, long long ** colL_short, long long ** indxU_short,
 	long long ** indxL_short, const long long MKLn, long long* indxU, long long* indxL,
 	double* MKLbx, long long* colU, long long* colL, double* bx, long long N);
@@ -91,3 +93,9 @@ void makeBlockMatrix12x12UpCOO(long long * I, long long * J, double * COOVal, lo
 
 void makeBlockMatrix12x12LowCOORandom(long long * I, long long * J, double * COOVal, long long NzL);
 void makeBlockMatrix12x12UpCOORandom(long long * I, long long * J, double * COOVal, long long NzU);
+
+void generateBigBlockMatrixL(long long * I, long long * J, double * COOVal, long long NzL, long long N, long long blockSize);
+void generateBigBlockMatrixU(long long * I, long long * J, double * COOVal, long long NzU, long long N, long long blockSize);
+
+long long calcNzL(long long N, long long blockSizeL);
+long long calcNzU(long long N, long long blockSizeU);
