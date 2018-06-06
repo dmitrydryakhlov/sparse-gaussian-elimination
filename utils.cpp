@@ -33,14 +33,15 @@ long long mm_read_mtx_crd_size(FILE *f, long long *M, long long *N, long long *n
 		return 0;
 }
 
-long long mm_write_mtx_crd_size(FILE *f, int M, int N, int nz) {
+long long mm_write_mtx_crd_size(FILE *f, long long M, long long N, long long nz) {
 	if (fprintf(f, "%d %d %d\n", M, N, nz) != 3)
 		return 1;
 	else
 		return 0;
 }
 
-long long readMTX(const char * fileName, long long ** I, long long ** J, double ** val, long long * M, long long * N, long long * nz)
+long long readMTX(const char * fileName, long long ** I, long long ** J,
+	double ** val, long long * M, long long * N, long long * nz)
 {
 	FILE *f;
 	long long i;
@@ -153,7 +154,8 @@ void printVectorI(long long* b, long long N) {
 	printf("\n\n");
 }
 
-long long saveBinCRS(const char * fileName, long long n, long long * row, long long * col, double * val)
+long long saveBinCRS(const char * fileName, long long n, long long * row,
+	long long * col, double * val)
 {
 	FILE *f;
 	f = fopen(fileName, "wb");
@@ -166,7 +168,8 @@ long long saveBinCRS(const char * fileName, long long n, long long * row, long l
 	return 0;
 }
 
-long long cutLowerTriangleCOO(long long nz, long long * I, long long * J, double * val, long long * nzU, long long ** IU, long long ** JU, double ** valU)
+long long cutLowerTriangleCOO(long long nz, long long * I, long long * J, double * val,
+	long long * nzU, long long ** IU, long long ** JU, double ** valU)
 {
 	long long i, j;
 	(*nzU) = 0;
@@ -190,7 +193,8 @@ long long cutLowerTriangleCOO(long long nz, long long * I, long long * J, double
 	return 0;
 }
 
-long long cutUpperTriangleCOO(long long nz, long long * I, long long * J, double * val, long long * nzL, long long ** IL, long long ** JL, double ** valL)
+long long cutUpperTriangleCOO(long long nz, long long * I, long long * J, double * val,
+	long long * nzL, long long ** IL, long long ** JL, double ** valL)
 {
 	long long i, j;
 	(*nzL) = 0;
@@ -214,7 +218,8 @@ long long cutUpperTriangleCOO(long long nz, long long * I, long long * J, double
 	return 0;
 }
 
-long long transposeCOO(long long nz, long long * I, long long * J, double * val, long long &nzT, long long ** IT, long long ** JT, double ** valT)
+long long transposeCOO(long long nz, long long * I, long long * J, double * val,
+	long long &nzT, long long ** IT, long long ** JT, double ** valT)
 {
 	nzT = nz;
 	(*IT) = (long long*)malloc((nzT) * sizeof(long long));
@@ -265,6 +270,13 @@ void mallocVectors(double** x, double** y, double** b,
 	(*yBlock) = (double*)malloc((N) * sizeof(double));
 	(*bBlock) = (double*)malloc((N) * sizeof(double));
 	(*bNodeUp) = (double*)malloc((N) * sizeof(double));
+}
+
+void mallocMatrixNxN(double *** A, long long N) {
+	*(A) = (double**)malloc((N) * sizeof(double*));
+	for (long long i = 0; i < N; i++) {
+		(*A)[i] = (double*)malloc((N) * sizeof(double));
+	}
 }
 
 void randVector(double* b, long long N) {
@@ -364,7 +376,8 @@ long long countZeroDiag(long long * I, long long * J, long long nz, long long N)
 	return N - count;
 }
 
-void getZerosDiagNumbers(long long * I, long long * J, long long nz, long long N, long long count, long long * addDiag)
+void getZerosDiagNumbers(long long * I, long long * J, long long nz,
+	long long N, long long count, long long * addDiag)
 {
 	long long ind = 0;
 	long long* indexes = (long long*)malloc(N * sizeof(long long));
@@ -382,7 +395,8 @@ void getZerosDiagNumbers(long long * I, long long * J, long long nz, long long N
 		}
 }
 
-void fillDiag(long long * I, long long * J, double * val, long long * Inew, long long * Jnew, double * valNew, long long N, long long nz, long long nzNew, long long * addDiag) {
+void fillDiag(long long * I, long long * J, double * val, long long * Inew, long long * Jnew, double * valNew,
+	long long N, long long nz, long long nzNew, long long * addDiag) {
 	for (long long i = 0; i < nz; i++) {
 		Inew[i] = I[i];
 		Jnew[i] = J[i];
@@ -507,7 +521,8 @@ void mallocMatrixCCS(double** AVal, long long** ACol, long long** AIndx, long lo
 	(*AIndx) = new long long[N + 1];
 }
 
-void makeBlock6x6LowCCS(double * MatrixLowVal, long long * MatrixLowRow, long long * MatrixLowIndx, long long NzL, long long N)
+void makeBlock6x6LowCCS(double * MatrixLowVal, long long * MatrixLowRow,
+	long long * MatrixLowIndx, long long NzL, long long N)
 {
 	for (long long i = 0; i < NzL; i++)
 		MatrixLowVal[i] = 1;
@@ -528,7 +543,8 @@ void makeBlock6x6LowCCS(double * MatrixLowVal, long long * MatrixLowRow, long lo
 	MatrixLowIndx[6] = 16;
 }
 
-void makeBlock6x6UpCCS(double * MatrixUpVal, long long * MatrixUpRow, long long * MatrixUpIndx, long long NzU, long long N)
+void makeBlock6x6UpCCS(double * MatrixUpVal, long long * MatrixUpRow,
+	long long * MatrixUpIndx, long long NzU, long long N)
 {
 	for (long long i = 0; i < NzU; i++)
 		MatrixUpVal[i] = 1;
@@ -655,19 +671,112 @@ void gaussBackBlockUp(long long startNode, long long finishNode, double * x,
 		for (j = index_low; j < index_top; j++) {
 			sum += valCrsU[j] * x[colU[j]];
 		}
-		if (valCrsU[indxU[k]] == 0) {
-			printf("valCrsU[indxU[%d]] = %lf\n", k, valCrsU[indxU[k]]);
-		}
 		x[k] = (y[k] - sum) / valCrsU[indxU[k]];
 		m++;
 	}
 	return;
 }
 
+void gaussBackBlockLowFull(long long startNode, long long finishNode, double** y,
+	double** b, double* valLCRS, long long* colLCRS, long long* indxLCRS,
+	double* valLCCS, long long* rowLCCS, long long* indxLCCS, long long N) {
+	long long j, k, index_top, index_low;
+	double sum;
+	long long m = 1;
+	for (long long l = 0; l < N; l++) {
+		y[l][startNode] = b[l][startNode] / valLCRS[indxLCRS[startNode + 1] - 1];
+		m = 1;
+		for (k = startNode + 1; k < finishNode; k++) {// ןמ סענמךאל םמהא
+			sum = 0;
+			index_top = indxLCRS[k + 1] - 1;
+			index_low = indxLCRS[k + 1] - 1 - m;
+			for (j = index_top - 1; j >= index_low; j--) {
+				sum += valLCRS[j] * y[l][colLCRS[j]];
+			}
+			y[l][k] = (b[l][k] - sum) / valLCRS[indxLCRS[k + 1] - 1];
+			m++;
+		}
+	}
+	return;
+}
+
+void gaussBackBlockUpFull(long long startNode, long long finishNode, double ** x,
+	double ** y, double * valUCRS, long long * colUCRS, long long * indxUCRS,
+	double * valUCCS, long long * rowUCCS, long long * indxUCCS, long long N) {
+
+	long long j, k, index_top, index_low;
+	double sum;
+	long long m;
+	for (long long l = 0; l < N; l++) {
+		x[l][startNode - 1] = y[l][startNode - 1] / valUCRS[indxUCRS[startNode - 1]];
+		m = 2;
+		for (k = startNode - 2; k >= finishNode; k--) {// ןמ סענמךאל םמהא
+			sum = 0;
+			index_top = indxUCRS[k] + m;
+			index_low = indxUCRS[k] + 1;
+			for (j = index_low; j < index_top; j++) {
+				sum += valUCRS[j] * x[l][colUCRS[j]];
+			}
+			x[l][k] = (y[l][k] - sum) / valUCRS[indxUCRS[k]];
+			m++;
+		}
+	}
+	return;
+}
+
+void gaussBackBlockLowFullPrl(long long startNode, long long finishNode, double** y,
+	double** b, double* valLCRS, long long* colLCRS, long long* indxLCRS,
+	double* valLCCS, long long* rowLCCS, long long* indxLCCS, long long N) {
+	long long index_top, index_low;
+	double sum;
+	long long m = 1;
+#pragma omp parallel for private(m, sum)
+	for (long long l = 0; l < N; l++) {
+		y[l][startNode] = b[l][startNode] / valLCRS[indxLCRS[startNode + 1] - 1];
+		m = 1;
+		for (long long k = startNode + 1; k < finishNode; k++) {// ןמ סענמךאל םמהא
+			sum = 0;
+			index_top = indxLCRS[k + 1] - 1;
+			index_low = indxLCRS[k + 1] - 1 - m;
+			for (long long j = index_top - 1; j >= index_low; j--) {
+				sum += valLCRS[j] * y[l][colLCRS[j]];
+			}
+			y[l][k] = (b[l][k] - sum) / valLCRS[indxLCRS[k + 1] - 1];
+			m++;
+		}
+	}
+	return;
+}
+
+void gaussBackBlockUpFullPrl(long long startNode, long long finishNode, double ** x,
+	double ** y, double * valUCRS, long long * colUCRS, long long * indxUCRS,
+	double * valUCCS, long long * rowUCCS, long long * indxUCCS, long long N) {
+
+	long long index_top, index_low;
+	double sum;
+	long long m;
+#pragma omp parallel for private(m, sum)
+	for (long long l = 0; l < N; l++) {
+		x[l][startNode - 1] = y[l][startNode - 1] / valUCRS[indxUCRS[startNode - 1]];
+		m = 2;
+		for (long long k = startNode - 2; k >= finishNode; k--) {// ןמ סענמךאל םמהא
+			sum = 0;
+			index_top = indxUCRS[k] + m;
+			index_low = indxUCRS[k] + 1;
+			for (long long j = index_low; j < index_top; j++) {
+				sum += valUCRS[j] * x[l][colUCRS[j]];
+			}
+			x[l][k] = (y[l][k] - sum) / valUCRS[indxUCRS[k]];
+			m++;
+		}
+	}
+	return;
+}
+
 void changeBLowCCS(double *MatrixLowVal, long long *MatrixLowRow, long long *MatrixLowIndx,
 	long long SNodesLowl, long long SNodesLowl_1, long long N, double* x, double* bLow) {
-	for (int j = SNodesLowl; j < SNodesLowl_1; j++) {//ןמ גסול סעמכבאל
-		for (int i = MatrixLowIndx[j]; i < MatrixLowIndx[j + 1]; i++) {//גהמכü סעמכבצא
+	for (long long j = SNodesLowl; j < SNodesLowl_1; j++) {//ןמ גסול סעמכבאל
+		for (long long i = MatrixLowIndx[j]; i < MatrixLowIndx[j + 1]; i++) {//גהמכü סעמכבצא
 			bLow[MatrixLowRow[i]] -= MatrixLowVal[i] * x[j];
 		}
 	}
@@ -675,9 +784,55 @@ void changeBLowCCS(double *MatrixLowVal, long long *MatrixLowRow, long long *Mat
 
 void changeBUpCCS(double *MatrixUpVal, long long *MatrixUpRow, long long *MatrixUpIndx,
 	long long SNodesUpl, long long SNodesUpl_1, long long N, double* x, double* bUp) {
-	for (int j = SNodesUpl_1; j < SNodesUpl; j++) {//ןמ גסול סעמכבאל
-		for (int i = MatrixUpIndx[j]; i < MatrixUpIndx[j + 1]; i++) {//גהמכü סעמכבצא
+	for (long long j = SNodesUpl_1; j < SNodesUpl; j++) {//ןמ גסול סעמכבאל
+		for (long long i = MatrixUpIndx[j]; i < MatrixUpIndx[j + 1]; i++) {//גהמכü סעמכבצא
 			bUp[MatrixUpRow[i]] -= MatrixUpVal[i] * x[j];
+		}
+	}
+}
+
+void changeBLowFull(double *MatrixLowVal, long long *MatrixLowRow, long long *MatrixLowIndx,
+	long long SNodesLowl, long long SNodesLowl_1, long long N, double** x, double** bLow) {
+	for (int k = 0; k < N; k++) {
+		for (long long j = SNodesLowl; j < SNodesLowl_1; j++) {//ןמ גסול סעמכבאל
+			for (long long i = MatrixLowIndx[j]; i < MatrixLowIndx[j + 1]; i++) {//גהמכü סעמכבצא
+				bLow[k][MatrixLowRow[i]] -= MatrixLowVal[i] * x[k][j];
+			}
+		}
+	}
+}
+
+void changeBUpFull(double *MatrixUpVal, long long *MatrixUpRow, long long *MatrixUpIndx,
+	long long SNodesUpl, long long SNodesUpl_1, long long N, double** x, double** bUp) {
+	for (int k = 0; k < N; k++) {
+		for (long long j = SNodesUpl_1; j < SNodesUpl; j++) {//ןמ גסול סעמכבאל
+			for (long long i = MatrixUpIndx[j]; i < MatrixUpIndx[j + 1]; i++) {//גהמכü סעמכבצא
+				bUp[k][MatrixUpRow[i]] -= MatrixUpVal[i] * x[k][j];
+			}
+		}
+	}
+}
+
+void changeBLowFullPrl(double *MatrixLowVal, long long *MatrixLowRow, long long *MatrixLowIndx,
+	long long SNodesLowl, long long SNodesLowl_1, long long N, double** x, double** bLow) {
+#pragma omp parallel for
+	for (int k = 0; k < N; k++) {
+		for (long long j = SNodesLowl; j < SNodesLowl_1; j++) {//ןמ גסול סעמכבאל
+			for (long long i = MatrixLowIndx[j]; i < MatrixLowIndx[j + 1]; i++) {//גהמכü סעמכבצא
+				bLow[k][MatrixLowRow[i]] -= MatrixLowVal[i] * x[k][j];
+			}
+		}
+	}
+}
+
+void changeBUpFullPrl(double *MatrixUpVal, long long *MatrixUpRow, long long *MatrixUpIndx,
+	long long SNodesUpl, long long SNodesUpl_1, long long N, double** x, double** bUp) {
+#pragma omp parallel for
+	for (int k = 0; k < N; k++) {
+		for (long long j = SNodesUpl_1; j < SNodesUpl; j++) {//ןמ גסול סעמכבאל
+			for (long long i = MatrixUpIndx[j]; i < MatrixUpIndx[j + 1]; i++) {//גהמכü סעמכבצא
+				bUp[k][MatrixUpRow[i]] -= MatrixUpVal[i] * x[k][j];
+			}
 		}
 	}
 }
@@ -698,6 +853,50 @@ void blockSolverUpCCS(double *MatrixUpValCRS, long long *MatrixUpColCRS, long lo
 	for (long long l = 0; l < NodesNUp - 1; l++) { //ןמ גסול םמהאל
 		gaussBackBlockUp(SNodesUp[l], SNodesUp[l + 1], xUp, bUp, MatrixUpValCRS, MatrixUpColCRS, MatrixUpIndxCRS);
 		changeBUpCCS(MatrixUpValCCS, MatrixUpColCCS, MatrixUpIndxCCS, SNodesUp[l], SNodesUp[l + 1], N, xUp, bUp);
+	}
+}
+
+void blockSolverLowFull(double * MatrixLowValCRS, long long * MatrixLowColCRS, long long * MatrixLowIndxCRS,
+	double * MatrixLowValCCS, long long * MatrixLowRowCCS, long long * MatrixLowIndxCCS,
+	long long * SNodesLow, long long NodesNLow, double ** xLow, double ** bLow, long long N) {
+	for (long long l = 0; l < NodesNLow - 1; l++) { //ןמ גסול םמהאל
+		gaussBackBlockLowFull(SNodesLow[l], SNodesLow[l + 1], xLow, bLow, MatrixLowValCRS,
+			MatrixLowColCRS, MatrixLowIndxCRS, MatrixLowValCCS, MatrixLowRowCCS, MatrixLowIndxCCS, N);
+		changeBLowFull(MatrixLowValCCS, MatrixLowRowCCS, MatrixLowIndxCCS, SNodesLow[l], SNodesLow[l + 1], N, xLow, bLow);
+	}
+}
+
+void blockSolverUpFull(double * MatrixUpValCRS, long long * MatrixUpColCRS, long long * MatrixUpIndxCRS,
+	double * MatrixUpValCCS, long long * MatrixUpRowCCS, long long * MatrixUpIndxCCS,
+	long long * SNodesUp, long long NodesNUp, double ** xUp, double ** bUp, long long N) {
+	for (long long l = 0; l < NodesNUp - 1; l++) { //ןמ גסול םמהאל
+		gaussBackBlockUpFull(SNodesUp[l], SNodesUp[l + 1], xUp, bUp, MatrixUpValCRS, MatrixUpColCRS, MatrixUpIndxCRS,
+			MatrixUpValCCS, MatrixUpRowCCS, MatrixUpIndxCCS, N);
+		changeBUpFull(MatrixUpValCCS, MatrixUpRowCCS, MatrixUpIndxCCS, SNodesUp[l], SNodesUp[l + 1], N, xUp, bUp);
+	}
+}
+
+void blockSolverLowFullPrl(double * MatrixLowValCRS, long long * MatrixLowColCRS, long long * MatrixLowIndxCRS,
+	double * MatrixLowValCCS, long long * MatrixLowRowCCS, long long * MatrixLowIndxCCS,
+	long long * SNodesLow, long long NodesNLow, double ** xLow, double ** bLow, long long N) {
+	for (long long l = 0; l < NodesNLow - 1; l++) { //ןמ גסול םמהאל
+		//gaussBackBlockLowFullPrl(SNodesLow[l], SNodesLow[l + 1], xLow, bLow, MatrixLowValCRS,
+		//	MatrixLowColCRS, MatrixLowIndxCRS, MatrixLowValCCS, MatrixLowRowCCS, MatrixLowIndxCCS, N);
+		//changeBLowFullPrl(MatrixLowValCCS, MatrixLowRowCCS, MatrixLowIndxCCS, SNodesLow[l], SNodesLow[l + 1], N, xLow, bLow);
+		gaussBackBlockLowFullPrl(SNodesLow[l], SNodesLow[l + 1], xLow, bLow, MatrixLowValCRS,
+			MatrixLowColCRS, MatrixLowIndxCRS, MatrixLowValCCS, MatrixLowRowCCS, MatrixLowIndxCCS, N);
+		changeBLowFullPrl(MatrixLowValCCS, MatrixLowRowCCS, MatrixLowIndxCCS, SNodesLow[l], SNodesLow[l + 1], N, xLow, bLow);
+
+	}
+}
+
+void blockSolverUpFullPrl(double * MatrixUpValCRS, long long * MatrixUpColCRS, long long * MatrixUpIndxCRS,
+	double * MatrixUpValCCS, long long * MatrixUpRowCCS, long long * MatrixUpIndxCCS,
+	long long * SNodesUp, long long NodesNUp, double ** xUp, double ** bUp, long long N) {
+	for (long long l = 0; l < NodesNUp - 1; l++) { //ןמ גסול םמהאל
+		gaussBackBlockUpFullPrl(SNodesUp[l], SNodesUp[l + 1], xUp, bUp, MatrixUpValCRS, MatrixUpColCRS, MatrixUpIndxCRS,
+			MatrixUpValCCS, MatrixUpRowCCS, MatrixUpIndxCCS, N);
+		changeBUpFullPrl(MatrixUpValCCS, MatrixUpRowCCS, MatrixUpIndxCCS, SNodesUp[l], SNodesUp[l + 1], N, xUp, bUp);
 	}
 }
 
@@ -1105,15 +1304,26 @@ void generateBigBlockMatrixL(long long * I, long long * J, double * COOVal, long
 	lldiv_t blockCount = div(N, blockSize);
 	// lldiv_t.quot - צוכאÿ קאסעü
 	// lldiv_t.rem - מסעאעמך
-
+	bool flag;
 	long long k = 0;
 	for (long long blockI = 0; blockI < blockCount.quot; blockI++) {
 		for (long long i = 0; i < blockSize; i++) {
 			if (fullRowL[i + blockI*blockSize] == 1) {
+				if (blockI % 2 == 0) {
+					flag = false;
+				}
+				else {
+					flag = true;
+				}
 				for (long long j = 0; j <= blockI * blockSize + i; j++) {
-					I[k] = blockI * blockSize + i;
-					J[k] = j;
-					k++;
+					if (j % blockSize == 0) {
+						flag = !flag;
+					}
+					if (flag) {
+						I[k] = blockI * blockSize + i;
+						J[k] = j;
+						k++;
+					}
 				}
 			}
 			else {
@@ -1125,25 +1335,22 @@ void generateBigBlockMatrixL(long long * I, long long * J, double * COOVal, long
 			}
 		}
 	}
+
 	for (long long i = N - blockCount.rem; i < N; i++) {
-		if (fullRowL[i] == 1) {
+		/*if (fullRowL[i] == 1) {
 			for (long long j = 0; j <= i; j++) {
 				I[k] = i;
 				J[k] = j;
 				k++;
 			}
 		}
-		else {
-			for (long long j = N - blockCount.rem; j <= i; j++) {
-				I[k] = i;
-				J[k] = j;
-				k++;
-			}
+		else {*/
+		for (long long j = N - blockCount.rem; j <= i; j++) {
+			I[k] = i;
+			J[k] = j;
+			k++;
 		}
-	}
 
-	for (int i = 0; i < k; i++) {
-		printf("[%d]: %d   %d  \n", i, I[i], J[i]);
 	}
 	return;
 }
@@ -1156,15 +1363,23 @@ void generateBigBlockMatrixU(long long * I, long long * J, double * COOVal,
 	}
 
 	lldiv_t blockCount = div(N, blockSize);
-
+	bool flag, flag2;
 	long long k = 0;
 	for (long long blockI = 0; blockI < blockCount.quot; blockI++) {
 		for (long long i = 0; i < blockSize; i++) {
-			if (fullRowU[i + blockI*blockSize] == 1) {
+			if (fullRowU[i + blockI*blockSize]) {
+				flag = true;
+				flag2 = false;
 				for (long long j = i + blockI*blockSize; j < N; j++) {
-					I[k] = blockI * blockSize + i;
-					J[k] = j;
-					k++;
+					if ((j % blockSize == 0)&&(flag2)) {
+						flag = !flag;
+					}
+					if (flag) {
+						I[k] = blockI * blockSize + i;
+						J[k] = j;
+						k++;
+						flag2 = true;
+					}
 				}
 			}
 			else {
@@ -1184,32 +1399,47 @@ void generateBigBlockMatrixU(long long * I, long long * J, double * COOVal,
 			k++;
 		}
 	}
-
-	for (int i = 0; i < k; i++) {
-		printf("[%d]: %d   %d  \n", i, I[i], J[i]);
-	}
 	return;
 }
 
 long long calcNzL(long long N, long long blockSizeL, long long **fullRowL)
 {
 	(*fullRowL) = (long long *)malloc(N * sizeof(long long));
-
-	for (int i = 0; i < N; i++) {
-		(*fullRowL)[i] = rand() % 2;
+	int count = 0;
+	for (long long i = 0; i < N; i++) {
+		if (rand() % 100 < 5) {
+			(*fullRowL)[i] = 1;
+			count++;
+		}
+		else {
+			(*fullRowL)[i] = 0;
+		}
 	}
-	(*fullRowL)[6] = 1;
 	for (int i = 0; i < N; i++) {
-		printf("FullRowL[%d] = %d\n", i, (*fullRowL)[i]);
+		printf("fullRowL[%d] = %d \n", i, (*fullRowL)[i]);
 	}
-
+	printf("full rowsL = %d\n", count);
 	lldiv_t blockCount = div(N, blockSizeL);
+	// lldiv_t.quot - צוכאÿ קאסעü
+	// lldiv_t.rem - מסעאעמך
+	bool flag;
 	long long k = 0;
 	for (long long blockI = 0; blockI < blockCount.quot; blockI++) {
 		for (long long i = 0; i < blockSizeL; i++) {
 			if ((*fullRowL)[i + blockI*blockSizeL] == 1) {
+				if (blockI % 2 == 0) {
+					flag = false;
+				}
+				else {
+					flag = true;
+				}
 				for (long long j = 0; j <= blockI * blockSizeL + i; j++) {
-					k++;
+					if (j % blockSizeL == 0) {
+						flag = !flag;
+					}
+					if (flag) {
+						k++;
+					}
 				}
 			}
 			else {
@@ -1219,16 +1449,10 @@ long long calcNzL(long long N, long long blockSizeL, long long **fullRowL)
 			}
 		}
 	}
+
 	for (long long i = N - blockCount.rem; i < N; i++) {
-		if ((*fullRowL)[i] == 1) {
-			for (long long j = 0; j <= i; j++) {
-				k++;
-			}
-		}
-		else {
-			for (long long j = N - blockCount.rem; j <= i; j++) {
-				k++;
-			}
+		for (long long j = N - blockCount.rem; j <= i; j++) {
+			k++;
 		}
 	}
 	return k;
@@ -1238,21 +1462,36 @@ long long calcNzU(long long N, long long blockSizeU, long long **fullRowU) {
 	lldiv_t blockCount = div(N, blockSizeU);
 
 	(*fullRowU) = (long long *)malloc(N * sizeof(long long));
-
-	for (int i = 0; i < N; i++) {
-		(*fullRowU)[i] = rand() % 2;
+	int count = 0;
+	for (long long i = 0; i < N; i++) {
+		if (rand() % 100 < 5) {
+			(*fullRowU)[i] = 1;
+			count++;
+		}
+		else {
+			(*fullRowU)[i] = 0;
+		}
 	}
-	(*fullRowU)[6] = 1;
 	for (int i = 0; i < N; i++) {
-		printf("FullRowU[%d] = %d\n", i, (*fullRowU)[i]);
+		printf("fullRowU[%d] = %d \n", i, (*fullRowU)[i]);
 	}
 
+	printf("full rowsU = %d\n", count);
+	bool flag, flag2;
 	long long k = 0;
 	for (long long blockI = 0; blockI < blockCount.quot; blockI++) {
 		for (long long i = 0; i < blockSizeU; i++) {
-			if (fullRowU[i + blockI*blockSizeU]) {
-				for (long long j = i; j < N; j++) {
-					k++;
+			if ((*fullRowU)[i + blockI*blockSizeU]) {
+				flag = true;
+				flag2 = false;
+				for (long long j = i + blockI*blockSizeU; j < N; j++) {
+					if ((j % blockSizeU == 0) && (flag2)) {
+						flag = !flag;
+					}
+					if (flag) {
+						k++;
+						flag2 = true;
+					}
 				}
 			}
 			else {
