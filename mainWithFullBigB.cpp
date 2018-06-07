@@ -32,7 +32,7 @@ int main(int argc, char* argv[]) {
 	long long N, M, nz, nzU, nzL;
 
 	//if (readMTX(argv[1], &I, &J, &valCOO, &M, &N, &nz) != 0)
-	//	exit(0);
+		//exit(0);
 
 	if (readMTX(argv[1], &IL, &JL, &valLCOO, &M, &N, &nzL) != 0)
 		exit(1);
@@ -40,11 +40,13 @@ int main(int argc, char* argv[]) {
 	if (readMTX(argv[2], &IU, &JU, &valUCOO, &M, &N, &nzU) != 0)
 		exit(1);
 
+	M = 2000;
+	
 	//checkAndFillDiag(&I, &J, nz, N, &valCOO);
 	//mallocVectors(&e, &y, &b, &xCRS, &yCRS, &bCRS, &xMKL, &yMKL,
 		//&bMKL, &xNode, &yNode, &bNode, &xBlock, &yBlock, &bBlock, &useless, N);
 
-
+	
 	CRSErrors = (long long*)malloc((N) * sizeof(long long));
 	BlockErrors = (long long*)malloc((N) * sizeof(long long));
 	BlockFullErrors = (long long*)malloc((N) * sizeof(long long));
@@ -61,33 +63,33 @@ int main(int argc, char* argv[]) {
 	NodeAbsErrors = (double*)malloc((N) * sizeof(double));
 	MKLAbsErrors = (double*)malloc((N) * sizeof(double));
 
-	mallocMatrixNxN(&e, N);
-	mallocMatrixNxN(&y, N);
-	mallocMatrixNxN(&b, N);
-	mallocMatrixNxN(&xCRS, N);
-	mallocMatrixNxN(&yCRS, N);
-	mallocMatrixNxN(&bCRS, N);
-	mallocMatrixNxN(&xMKL, N);
-	mallocMatrixNxN(&yMKL, N);
-	mallocMatrixNxN(&bMKL, N);
-	mallocMatrixNxN(&xNode, N);
-	mallocMatrixNxN(&yNode, N);
-	mallocMatrixNxN(&bNode, N);
-	mallocMatrixNxN(&xBlock, N);
-	mallocMatrixNxN(&yBlock, N);
-	mallocMatrixNxN(&bBlock, N);
-	mallocMatrixNxN(&xBlockPrl, N);
-	mallocMatrixNxN(&yBlockPrl, N);
-	mallocMatrixNxN(&bBlockPrl, N);
-	mallocMatrixNxN(&xBlockFull, N);
-	mallocMatrixNxN(&yBlockFull, N);
-	mallocMatrixNxN(&bBlockFull, N);
-	mallocMatrixNxN(&xBlockFullPrl, N);
-	mallocMatrixNxN(&yBlockFullPrl, N);
-	mallocMatrixNxN(&bBlockFullPrl, N);
+	mallocMatrixNxM(&e, N, M);
+	mallocMatrixNxM(&y, N, M);
+	mallocMatrixNxM(&b, N, M);
+	mallocMatrixNxM(&xCRS, N, M);
+	mallocMatrixNxM(&yCRS, N, M);
+	mallocMatrixNxM(&bCRS, N, M);
+	mallocMatrixNxM(&xMKL, N, M);
+	mallocMatrixNxM(&yMKL, N, M);
+	mallocMatrixNxM(&bMKL, N, M);
+	mallocMatrixNxM(&xNode, N, M);
+	mallocMatrixNxM(&yNode, N, M);
+	mallocMatrixNxM(&bNode, N, M);
+	mallocMatrixNxM(&xBlock, N, M);
+	mallocMatrixNxM(&yBlock, N, M);
+	mallocMatrixNxM(&bBlock, N, M);
+	mallocMatrixNxM(&xBlockPrl, N, M);
+	mallocMatrixNxM(&yBlockPrl, N, M);
+	mallocMatrixNxM(&bBlockPrl, N, M);
+	mallocMatrixNxM(&xBlockFull, N, M);
+	mallocMatrixNxM(&yBlockFull, N, M);
+	mallocMatrixNxM(&bBlockFull, N, M);
+	mallocMatrixNxM(&xBlockFullPrl, N, M);
+	mallocMatrixNxM(&yBlockFullPrl, N, M);
+	mallocMatrixNxM(&bBlockFullPrl, N, M);
 
 
-	for (long long i = 0; i < N; i++) {
+	for (long long i = 0; i < M; i++) {
 		randVector(e[i], N);
 		//randVector(bCRS[i], N);
 		//randVector(bMKL[i], N);
@@ -101,7 +103,7 @@ int main(int argc, char* argv[]) {
 	//transposeCOO(nzL, IL, JL, valLCOO, nzU, &IU, &JU, &valUCOO);
 
 
-	printf("nzU = %d\n nzL = %d\n N = %d\n\n", nzU, nzL, N);
+	printf("nzU = %d\n nzL = %d\n N = %d M = %d\n\n", nzU, nzL, N, M);
 
 	/// Convert to CRS/CCS
 	COOtoCRS(N, nzU, IU, JU, valUCOO, &indxU, &colU, &valUCRS);
@@ -112,18 +114,18 @@ int main(int argc, char* argv[]) {
 	//printf("Finished saving CRS matrix\n");
 
 	/// Mult U*e = y /// L*y = b
-	for (long long i = 0; i < N; i++) {
+	for (long long i = 0; i < M; i++) {
 		matrixMultVector(N, e[i], y[i], valUCRS, colU, indxU);
 		matrixMultVector(N, y[i], b[i], valLCRS, colL, indxL);
 	}
-	for (int i = 0; i < N; i++)
+	for (int i = 0; i < M; i++)
 		for (int j = 0; j < N; j++)
 			bCRS[i][j] = bNode[i][j] = bBlockFull[i][j] = bBlockFullPrl[i][j] = bBlockPrl[i][j] = bBlock[i][j] = bMKL[i][j] = b[i][j];
 
 	/// CRS находим y из L*y=bx /// находим х из U*x=y
 	printf("gaussBackLow started\n");
 	CRSTStart = clock();
-	for (int i = 0; i < N; i++) {
+	for (int i = 0; i < M; i++) {
 		gaussBackLow(0, N, yCRS[i], bCRS[i], valLCRS, colL, indxL);
 		gaussBackUp(N, 0, xCRS[i], yCRS[i], valUCRS, colU, indxU);
 	}
@@ -143,19 +145,19 @@ int main(int argc, char* argv[]) {
 	printf("\n NodesNUp / N : %d/%d \n", NodesNUp - 1, N);
 
 	/// NodeSolverLow & NodeSolverUp
-	printf("NodeSolverLow started\n");
-	NodeTStart = clock();
-	for (int i = 0; i < N; i++) {
-		nodeSolverLow(valLCRS, colL, indxL, SNodesLow, NodesNLow, yNode[i], bNode[i], N);
-		nodeSolverUp(valUCRS, colU, indxU, SNodesUp, NodesNUp, xNode[i], yNode[i], N);
-	}
-	NodeTFinish = clock();
-	printf("NodeSolverUp finished\n");
+	//printf("NodeSolverLow started\n");
+	//NodeTStart = clock();
+	//for (int i = 0; i < M; i++) {
+	//	nodeSolverLow(valLCRS, colL, indxL, SNodesLow, NodesNLow, yNode[i], bNode[i], N);
+	//	nodeSolverUp(valUCRS, colU, indxU, SNodesUp, NodesNUp, xNode[i], yNode[i], N);
+	//}
+	//NodeTFinish = clock();
+	//printf("NodeSolverUp finished\n");
 
 	/// BlockSolverLow & BlockSolverUp
 	printf("BlockSolverLow started\n");
 	BlockTStart = clock();
-	for (int i = 0; i < N; i++) {
+	for (int i = 0; i < M; i++) {
 		blockSolverLowCCS(valLCRS, colL, indxL, valLCCS, LowRowCCS, LowIndxCCS, SNodesLow, NodesNLow, yBlock[i], bBlock[i], N);
 		blockSolverUpCCS(valUCRS, colU, indxU, valUCCS, UpRowCCS, UpIndxCCS, SNodesUp, NodesNUp, xBlock[i], yBlock[i], N);
 	}
@@ -165,8 +167,8 @@ int main(int argc, char* argv[]) {
 	/// BlockSolverLowFull & BlockSolverUpFull
 	printf("BlockSolverLowFull started\n");
 	BlockFullTStart = clock();
-	blockSolverLowFull(valLCRS, colL, indxL, valLCCS, LowRowCCS, LowIndxCCS, SNodesLow, NodesNLow, yBlockFull, bBlockFull, N);
-	blockSolverUpFull(valUCRS, colU, indxU, valUCCS, UpRowCCS, UpIndxCCS, SNodesUp, NodesNUp, xBlockFull, yBlockFull, N);
+	blockSolverLowFull(valLCRS, colL, indxL, valLCCS, LowRowCCS, LowIndxCCS, SNodesLow, NodesNLow, yBlockFull, bBlockFull, N, M);
+	blockSolverUpFull(valUCRS, colU, indxU, valUCCS, UpRowCCS, UpIndxCCS, SNodesUp, NodesNUp, xBlockFull, yBlockFull, N, M);
 	BlockFullTFinish = clock();
 	printf("BlockSolverUpFull finished\n");
 
@@ -174,7 +176,7 @@ int main(int argc, char* argv[]) {
 	printf("BlockSolverLowPrl started\n");
 	BlockTStartPrl = clock();
 #pragma omp parallel for 
-	for (int i = 0; i < N; i++) {
+	for (int i = 0; i < M; i++) {
 		blockSolverLowCCS(valLCRS, colL, indxL, valLCCS, LowRowCCS, LowIndxCCS, SNodesLow, NodesNLow, yBlockPrl[i], bBlockPrl[i], N);
 		blockSolverUpCCS(valUCRS, colU, indxU, valUCCS, UpRowCCS, UpIndxCCS, SNodesUp, NodesNUp, xBlockPrl[i], yBlockPrl[i], N);
 	}
@@ -184,15 +186,12 @@ int main(int argc, char* argv[]) {
 	/// BlockSolverLowFullPrl & BlockSolverUpFullPrl
 	printf("BlockSolverLowFullPrl started\n");
 	BlockFullPrlTStart = clock();
-	//blockSolverLowFullPrl(valLCRS, colL, indxL, valLCCS, LowRowCCS, LowIndxCCS, SNodesLow, NodesNLow, yBlockFullPrl, bBlockFullPrl, N);
-	//blockSolverUpFullPrl(valUCRS, colU, indxU, valUCCS, UpRowCCS, UpIndxCCS, SNodesUp, NodesNUp, xBlockFullPrl, yBlockFullPrl, N);
-	blockSolverLowFullPrl(valLCRS, colL, indxL, valLCCS, LowRowCCS, LowIndxCCS, SNodesLow, NodesNLow, yBlockFullPrl, bBlockFullPrl, N);
-	blockSolverUpFullPrl(valUCRS, colU, indxU, valUCCS, UpRowCCS, UpIndxCCS, SNodesUp, NodesNUp, xBlockFullPrl, yBlockFullPrl, N);
-
+	blockSolverLowFullPrl(valLCRS, colL, indxL, valLCCS, LowRowCCS, LowIndxCCS, SNodesLow, NodesNLow, yBlockFullPrl, bBlockFullPrl, N, M);
+	blockSolverUpFullPrl(valUCRS, colU, indxU, valUCCS, UpRowCCS, UpIndxCCS, SNodesUp, NodesNUp, xBlockFullPrl, yBlockFullPrl, N, M);
 	BlockFullPrlTFinish = clock();
 	printf("BlockSolverUpFullPrl finished\n");
-	
-	
+
+
 	///MKL Prepare
 	/*const long long  MKLn = N;
 	long long	MKLerror = 0;
@@ -219,7 +218,7 @@ int main(int argc, char* argv[]) {
 		BlockPrlSumErrors = 0, BlockFullSumErrors = 0, BlockFullPrlSumErrors = 0;
 	printf("\n Size: %d x %d , nzL = %d , nzU = %d\n", N, N, nzL, nzU);
 	printf("\n\n [CRS]\n");
-	for (int i = 0; i < N; i++) {
+	for (int i = 0; i < M; i++) {
 		CRSErrors[i] = CheckSolv(N, e[i], xCRS[i]);
 		CRSSumErrors += CRSErrors[i];
 	}
@@ -228,39 +227,39 @@ int main(int argc, char* argv[]) {
 	//	MKLErrors[i] = CheckSolv(N, e[i], xMKL[i]);
 	// MKLSumErrors += MKLErrors[i];
 	//}
-	printf("[Node]\n");
-	for (int i = 0; i < N; i++) {
-		NodeErrors[i] = CheckSolv(N, e[i], xNode[i]);
-		NodeSumErrors += NodeErrors[i];
-	}
+	//printf("[Node]\n");
+	//for (int i = 0; i < N; i++) {
+	//	NodeErrors[i] = CheckSolv(N, e[i], xNode[i]);
+	//	NodeSumErrors += NodeErrors[i];
+	//}
 	printf("[Block]\n");
-	for (int i = 0; i < N; i++) {
+	for (int i = 0; i < M; i++) {
 		BlockErrors[i] = CheckSolv(N, e[i], xBlock[i]);
 		BlockSumErrors += BlockErrors[i];
 	}
 	printf("[BlockPrl]\n");
-	for (int i = 0; i < N; i++) {
+	for (int i = 0; i < M; i++) {
 		BlockPrlErrors[i] = CheckSolv(N, e[i], xBlockPrl[i]);
 		BlockPrlSumErrors += BlockErrors[i];
 	}
 	printf("[BlockFull]\n");
-	for (int i = 0; i < N; i++) {
+	for (int i = 0; i < M; i++) {
 		BlockFullErrors[i] = CheckSolv(N, e[i], xBlockFull[i]);
 		BlockFullSumErrors += BlockFullErrors[i];
 	}
 	printf("[BlockFullPrl]\n");
-	for (int i = 0; i < N; i++) {
+	for (int i = 0; i < M; i++) {
 		BlockFullPrlErrors[i] = CheckSolv(N, e[i], xBlockFullPrl[i]);
 		BlockFullPrlSumErrors += BlockFullPrlErrors[i];
 	}
 
-	for (int i = 0; i < N; i++) {
+	for (int i = 0; i < M; i++) {
 		CRSAbsErrors[i] = absError(N, e[i], xCRS[i]);
 		CRSAbsSumError += CRSAbsErrors[i];
 		//MKLAbsErrors[i] = absError(N, e[i], xMKL[i]);
 		//MKLAbsSumError += MKLAbsErrors[i];
-		NodeAbsErrors[i] = absError(N, e[i], xNode[i]);
-		NodeAbsSumError += NodeAbsErrors[i];
+		//NodeAbsErrors[i] = absError(N, e[i], xNode[i]);
+		//NodeAbsSumError += NodeAbsErrors[i];
 		BlockAbsErrors[i] = absError(N, e[i], xBlock[i]);
 		BlockAbsSumError += BlockAbsErrors[i];
 		BlockPrlAbsErrors[i] = absError(N, e[i], xBlockPrl[i]);
@@ -291,14 +290,14 @@ int main(int argc, char* argv[]) {
 	//		MKLSumErrors, N, (MKLTFinish - MKLTStart) / (float)CLOCKS_PER_SEC * 1000.0f);
 	//}
 
-	if (NodeSumErrors == 0) {
-		printf("\n[Node] All is Ok! absErrors = %.10f \n Time is %f\n",
-			NodeAbsSumError, (NodeTFinish - NodeTStart) / (float)CLOCKS_PER_SEC * 1000.0f);
-	}
-	else {
-		printf("\n[Node] Errors: %d/%d \n Time is %f\n",
-			NodeSumErrors, N, (NodeTFinish - NodeTStart) / (float)CLOCKS_PER_SEC * 1000.0f);
-	}
+	//if (NodeSumErrors == 0) {
+	//	printf("\n[Node] All is Ok! absErrors = %.10f \n Time is %f\n",
+	//		NodeAbsSumError, (NodeTFinish - NodeTStart) / (float)CLOCKS_PER_SEC * 1000.0f);
+	//}
+	//else {
+	//	printf("\n[Node] Errors: %d/%d \n Time is %f\n",
+	//		NodeSumErrors, N, (NodeTFinish - NodeTStart) / (float)CLOCKS_PER_SEC * 1000.0f);
+	//}
 
 	if (BlockSumErrors == 0) {
 		printf("\n[Block] All is Ok! absErrors = %.10f \n Time is %f\n",
@@ -358,7 +357,7 @@ int main(int argc, char* argv[]) {
 	free(xBlock); free(yBlock);	free(bBlock);
 	free(xBlockFull); free(yBlockFull);	free(bBlockFull);
 	free(xBlockFullPrl); free(yBlockFullPrl); free(bBlockFullPrl);
-	 
+
 	free(IU); free(JU); free(colU);
 	free(IL); free(JL); free(colL);
 	free(valUCOO); free(valLCOO); free(valUCRS); free(valUCCS);

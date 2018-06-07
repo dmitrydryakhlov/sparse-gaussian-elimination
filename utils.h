@@ -11,6 +11,7 @@ long long mm_write_mtx_crd(char fname[], long long M, long long N, long long nz,
 long long mm_read_mtx_crd_size(FILE *f, long long *M, long long *N, long long *nz);
 long long mm_write_mtx_crd_size(FILE *f, int M, int N, int nz);
 long long saveBinCRS(const char* fileName, long long n, long long *row, long long *col, double *val);
+int ReadMatrixFromBinaryFile(char* matrixName, int &nz, int &N, long long **indx, long long **col, double** value);
 
 long long COOtoCRS(long long n, long long nz, long long *I, long long *J, double *valCOO, long long **indx, long long **col, double **valCrs);
 
@@ -53,7 +54,7 @@ void mallocVectors(double** x, double** y, double** b,
 	double** xNode, double** yNode, double** bNode,
 	double** xBlock, double** yBlock, double** bBlock,
 	double** bNodeUp, long long N);
-void mallocMatrixNxN(double*** A, long long N);
+void mallocMatrixNxM(double*** A, long long N, long long M);
 
 void randVector(double* b, long long N);
 
@@ -89,17 +90,17 @@ void blockSolverUpCCS(double *MatrixUpValCRS, long long *MatrixUpColCRS, long lo
 
 void blockSolverLowFull(double *MatrixLowValCRS, long long *MatrixLowColCRS, long long *MatrixLowIndxCRS,
 	double *MatrixLowValCCS, long long *MatrixLowRowCCS, long long *MatrixLowIndxCCS,
-	long long* SNodesLow, long long NodesNLow, double** xLow, double** bLow, long long N);
+	long long* SNodesLow, long long NodesNLow, double** xLow, double** bLow, long long N, long long M);
 void blockSolverUpFull(double *MatrixUpValCRS, long long *MatrixUpColCRS, long long *MatrixUpIndxCRS,
 	double *MatrixUpValCCS, long long *MatrixUpRowCCS, long long *MatrixUpIndxCCS,
-	long long* SNodesUp, long long NodesNUp, double** xUp, double** bUp, long long N);
+	long long* SNodesUp, long long NodesNUp, double** xUp, double** bUp, long long N, long long M);
 
 void blockSolverLowFullPrl(double *MatrixLowValCRS, long long *MatrixLowColCRS, long long *MatrixLowIndxCRS,
 	double *MatrixLowValCCS, long long *MatrixLowRowCCS, long long *MatrixLowIndxCCS,
-	long long* SNodesLow, long long NodesNLow, double** xLow, double** bLow, long long N);
+	long long* SNodesLow, long long NodesNLow, double** xLow, double** bLow, long long N, long long M);
 void blockSolverUpFullPrl(double *MatrixUpValCRS, long long *MatrixUpColCRS, long long *MatrixUpIndxCRS,
 	double *MatrixUpValCCS, long long *MatrixUpRowCCS, long long *MatrixUpIndxCCS,
-	long long* SNodesUp, long long NodesNUp, double** xUp, double** bUp, long long N);
+	long long* SNodesUp, long long NodesNUp, double** xUp, double** bUp, long long N, long long M);
 
 void mallocMatrixCOO(long long** I, long long** J, double** COOVal, long long NzL);
 
@@ -126,8 +127,8 @@ void makeBlockMatrix12x12UpCOORandom(long long * I, long long * J, double * COOV
 void generateBigBlockMatrixL(long long * I, long long * J, double * COOVal, long long NzL, long long N, long long blockSize, long long* fullRowL);
 void generateBigBlockMatrixU(long long * I, long long * J, double * COOVal, long long NzU, long long N, long long blockSize, long long* fullRowU);
 
-long long calcNzL(long long N, long long blockSizeL, long long **fullRowL);
-long long calcNzU(long long N, long long blockSizeU, long long **fullRowU);
+long long calcNzL(long long N, long long blockSizeL, long long **fullRowL, long long fullness);
+long long calcNzU(long long N, long long blockSizeU, long long **fullRowU, long long fullness);
 
 
 void gaussBackBlockUp(long long startNode, long long finishNode, double * x,
@@ -138,16 +139,16 @@ void gaussBackBlockLow(long long startNode, long long finishNode, double * x,
 
 void gaussBackBlockUpFull(long long startNode, long long finishNode, double ** x,
 	double ** y, double * valUCRS, long long * colUCRS, long long * indxUCRS,
-	double * valUCCS, long long * rowUCCS, long long * indxUCCS, long long N);
+	double * valUCCS, long long * rowUCCS, long long * indxUCCS, long long N, long long M);
 
 void gaussBackBlockLowFull(long long startNode, long long finishNode, double ** x,
 	double ** y, double * valUCRS, long long * colLCRS, long long * indxLCRS,
-	double * valLCCS, long long * rowLCCS, long long * indxUCCS, long long N);
+	double * valLCCS, long long * rowLCCS, long long * indxUCCS, long long N, long long M);
 
 void gaussBackBlockUpFullPrl(long long startNode, long long finishNode, double ** x,
 	double ** y, double * valUCRS, long long * colUCRS, long long * indxUCRS,
-	double * valUCCS, long long * rowUCCS, long long * indxUCCS, long long N);
+	double * valUCCS, long long * rowUCCS, long long * indxUCCS, long long N, long long M);
 
 void gaussBackBlockLowFullPrl(long long startNode, long long finishNode, double ** x,
 	double ** y, double * valUCRS, long long * colLCRS, long long * indxLCRS,
-	double * valLCCS, long long * rowLCCS, long long * indxUCCS, long long N);
+	double * valLCCS, long long * rowLCCS, long long * indxUCCS, long long N, long long M);

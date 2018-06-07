@@ -79,12 +79,12 @@ int main(int argc, char* argv[]) {
 	printf("\n NodesNUp / N : %d/%d \n", NodesNUp - 1, N);
 
 	/// NodeSolverLow & NodeSolverUp
-	printf("NodeSolverLow started\n");
-	NodeTStart = clock();
-	nodeSolverLow(valLCRS, colL, indxL, SNodesLow, NodesNLow, yNode, bNode, N);
-	nodeSolverUp(valUCRS, colU, indxU, SNodesUp, NodesNUp, xNode, yNode, N);
-	NodeTFinish = clock();
-	printf("NodeSolverUp finished\n");
+	//printf("NodeSolverLow started\n");
+	//NodeTStart = clock();
+	//nodeSolverLow(valLCRS, colL, indxL, SNodesLow, NodesNLow, yNode, bNode, N);
+	//nodeSolverUp(valUCRS, colU, indxU, SNodesUp, NodesNUp, xNode, yNode, N);
+	//NodeTFinish = clock();
+	//printf("NodeSolverUp finished\n");
 
 	/// BlockSolverLow & BlockSolverUp
 	printf("BlockSolverLow started\n");
@@ -117,14 +117,14 @@ int main(int argc, char* argv[]) {
 	long long CRSerrors = CheckSolv(N, e, xCRS);
 	printf("[MKL]\n");
 	long long MKLErrors = CheckSolv(N, e, xMKL);
-	printf("[Node]\n");
-	long long NodeErrors = CheckSolv(N, e, xNode);
+	//printf("[Node]\n");
+	//long long NodeErrors = CheckSolv(N, e, xNode);
 	printf("[Block]\n");
 	long long BlockErrors = CheckSolv(N, e, xBlock);
 
 	double CRSAbsErrors = absError(N, e, xCRS);
 	double MKLAbsErrors = absError(N, e, xMKL);
-	double NodeAbsErrors = absError(N, e, xNode);
+	//double NodeAbsErrors = absError(N, e, xNode);
 	double BlockAbsErrors = absError(N, e, xBlock);
 
 	/// PrintResult
@@ -147,14 +147,14 @@ int main(int argc, char* argv[]) {
 			MKLErrors, N, (MKLTFinish - MKLTStart) / (float)CLOCKS_PER_SEC * 1000.0f);
 	}
 
-	if (NodeErrors == 0) {
-		printf("\n[Node] All is Ok! absErrors = %.10f \n Time is %f\n",
-			NodeAbsErrors, (NodeTFinish - NodeTStart) / (float)CLOCKS_PER_SEC * 1000.0f);
-	}
-	else {
-		printf("\n[Node] Errors: %d/%d \n Time is %f\n",
-			NodeErrors, N, (NodeTFinish - NodeTStart) / (float)CLOCKS_PER_SEC * 1000.0f);
-	}
+	//if (NodeErrors == 0) {
+	//	printf("\n[Node] All is Ok! absErrors = %.10f \n Time is %f\n",
+	//		NodeAbsErrors, (NodeTFinish - NodeTStart) / (float)CLOCKS_PER_SEC * 1000.0f);
+	//}
+	//else {
+	//	printf("\n[Node] Errors: %d/%d \n Time is %f\n",
+	//		NodeErrors, N, (NodeTFinish - NodeTStart) / (float)CLOCKS_PER_SEC * 1000.0f);
+	//}
 
 	if (BlockErrors == 0) {
 		printf("\n[Block] All is Ok! absErrors = %.10f \n Time is %f\n",

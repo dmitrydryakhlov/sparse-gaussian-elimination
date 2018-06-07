@@ -23,15 +23,16 @@ int main(int argc, char* argv[]) {
 	double *bMKLLow, *bCRSLow, *bNodeLow, *bBlockLow, *bMKLUp, *bCRSUp, *bNodeUp, *bBlockUp;
 	long long *fullRowL, *fullRowU;
 
-	long long N = 5000;
-	long long blockSizeU = 100;
-	long long blockSizeL = 100;
+	long long N = 500;
+	long long blockSizeU = 10;
+	long long blockSizeL = 10;
+	long long fullness = 2;
 	
 	//mallocVectors(&xCRSLow, &xCRSUp, &xBlockLow, &xBlockUp, &xMKLLow, &xMKLUp, &xNodeLow, &xNodeUp,
 	//	&bCRSLow, &bCRSUp, &bBlockLow, &bBlockUp, &bMKLLow, &bMKLUp, &bNodeLow, &bNodeUp, N);
 
-	long long nzL = calcNzL(N, blockSizeL, &fullRowL);
-	long long nzU = calcNzU(N, blockSizeU, &fullRowU);
+	long long nzL = calcNzL(N, blockSizeL, &fullRowL, fullness);
+	long long nzU = calcNzU(N, blockSizeU, &fullRowU, fullness);
 
 	mallocMatrixCOO(&IL, &JL, &valLCOO, nzL);
 	mallocMatrixCOO(&IU, &JU, &valUCOO, nzU);
@@ -41,8 +42,8 @@ int main(int argc, char* argv[]) {
 	//makeBlockMatrix12x12LowCOORandom(IL, JL, valLCOO, nzL);
 	//makeBlockMatrix12x12UpCOORandom(IU, JU, valUCOO, nzU);
 
-	mm_write_mtx_crd("M20000_10L.mtx", N, N, nzL, IL, JL, valLCOO);
-	mm_write_mtx_crd("M20000_10U.mtx", N, N, nzU, IU, JU, valUCOO);
+	mm_write_mtx_crd("mtx/M500_10_2L.mtx", N, N, nzL, IL, JL, valLCOO);
+	mm_write_mtx_crd("mtx/M500_10_2U.mtx", N, N, nzU, IU, JU, valUCOO);
 	printf("nzL = %d  |  nzU = %d  |  N = %d  | blockSize = %d \n", nzL, nzU, N, blockSizeL);
 	printf("done!\n");
 	free(IL);

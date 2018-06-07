@@ -1,6 +1,11 @@
-## sparse-gaussian-elimination
-# Команда для запуска:
-MatrixSolv.exe G3_circuit.mtx
+# sparse-gaussian-elimination
+
+## MainGen.cpp
+для генерации матриц
+
+## mainBigMatrix.cpp
+для решения с вектором в правой части
  
-# ссылка на матрицу G3_circuit:
-https://drive.google.com/open?id=19uLMeiRLS0PAfzVqaZ2T5deSl337yc70
+
+## mainWithFullBigB.cpp
+для решения с Матрицей в правой части
