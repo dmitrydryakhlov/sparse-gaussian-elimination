@@ -11,9 +11,13 @@ long long mm_write_mtx_crd(char fname[], long long M, long long N, long long nz,
 long long mm_read_mtx_crd_size(FILE *f, long long *M, long long *N, long long *nz);
 long long mm_write_mtx_crd_size(FILE *f, int M, int N, int nz);
 long long saveBinCRS(const char* fileName, long long n, long long *row, long long *col, double *val);
-int ReadMatrixFromBinaryFile(char* matrixName, int &nz, int &N, long long **indx, long long **col, double** value);
+int ReadMatrixFromBinaryFile(char* matrixName, long long &nz, long long &N, long long **indx, long long **col, double** value);
 
 long long COOtoCRS(long long n, long long nz, long long *I, long long *J, double *valCOO, long long **indx, long long **col, double **valCrs);
+void CRStoCOO(long long N, long long nz, long long* I, long long *J, double* valCOO,
+	long long* indxCRS, long long* colCRS, double* valCRS);
+void COOtoCCS(long long N, long long nz, long long *I, long long *J,
+	double *valCOO, long long **indx, long long **row, double **valCcs);
 
 long long cutLowerTriangleCOO(long long nz, long long *I, long long *J, double *val, long long *nzU, long long **IU, long long **JU, double **valU);
 long long cutUpperTriangleCOO(long long nz, long long *I, long long *J, double *val, long long *nzL, long long **IL, long long **JL, double **valL);
@@ -51,9 +55,7 @@ void makeBlock6x6UpCCS(double *MatrixUpVal, long long *MatrixUpRow, long long *M
 void mallocVectors(double** x, double** y, double** b,
 	double** xCRS, double** yCRS, double** bCRS,
 	double** xMKL, double** yMKL, double** bMKL,
-	double** xNode, double** yNode, double** bNode,
-	double** xBlock, double** yBlock, double** bBlock,
-	double** bNodeUp, long long N);
+	double** xBlock, double** yBlock, double** bBlock, long long N);
 void mallocMatrixNxM(double*** A, long long N, long long M);
 
 void randVector(double* b, long long N);
@@ -103,8 +105,6 @@ void blockSolverUpFullPrl(double *MatrixUpValCRS, long long *MatrixUpColCRS, lon
 	long long* SNodesUp, long long NodesNUp, double** xUp, double** bUp, long long N, long long M);
 
 void mallocMatrixCOO(long long** I, long long** J, double** COOVal, long long NzL);
-
-void COOtoCCS(long long N, long long nz, long long *I, long long *J, double *valCOO, long long **indx, long long **row, double **valCcs);
 
 void makeMatrix6x6COO(long long* I, long long* J, double* COOVal, long long NzL);
 void mallocMatrixCOO(long long ** I, long long ** J, double ** COOVal, long long NzL);

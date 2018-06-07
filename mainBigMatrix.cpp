@@ -15,48 +15,51 @@ int main(int argc, char* argv[]) {
 	int error = 0;
 	float CRSTStart, NodeTStart, BlockTStart, MKLTStart, CalcSNodesTStart;
 	float CRSTFinish, NodeTFinish, BlockTFinish, MKLTFinish, CalcSNodesTFinish;
-	long long *I, *IU, *IL, *J, *JU, *JL, *colU, *colL, *indxL, *indxU;
-	double *valCOO, *valUCOO, *valLCOO, *valUCRS, *valLCRS, *valLCCS, *valUCCS;
+	long long *IU, *IL, *JU, *JL, *colU, *colL, *indxL, *indxU, *indxBinL, *indxBinU, *colBinL, *colBinU;
+	double *valUCOO, *valLCOO, *valUCRS, *valLCRS, *valLCCS, *valUCCS, *valBinL, *valBinU;
 	long long *UpRowCCS, *LowRowCCS, *UpIndxCCS, *LowIndxCCS;
 	long long *SNodesLow, *SNodesUp, NodesNLow, NodesNUp;
-	double *e, *y, *xCRS, *yCRS, *xBlock, *yBlock, *xMKL, *yMKL, *xNode, *yNode;
-	double *b, *bMKL, *bCRS, *bNode, *bBlock, *useless;
+	double *e, *y, *xCRS, *yCRS, *xBlock, *yBlock, *xMKL, *yMKL;
+	double *b, *bMKL, *bCRS, *bBlock;
 	long long N, M, nz, nzU, nzL;
 
-	//if (readMTX(argv[1], &I, &J, &valCOO, &M, &N, &nz) != 0)
-	//	exit(0);
+	printf("%s\n",argv[1]);
+	ReadMatrixFromBinaryFile(argv[1], nzL, N, &indxBinL, &colBinL, &valBinL);
+	printf("%s\n", argv[2]);
+	ReadMatrixFromBinaryFile(argv[2], nzU, N, &indxBinU, &colBinU, &valBinU);
 
-	if (readMTX(argv[1], &IL, &JL, &valLCOO, &M, &N, &nzL) != 0)
-		exit(0);
+	printf("\n readed! \n");
+	printf("nzU = %d\n nzL = %d\n N = %d M = %d\n\n", nzU, nzL, N, M);
 
-	if (readMTX(argv[2], &IU, &JU, &valUCOO, &M, &N, &nzU) != 0)
-		exit(0);
+	mallocMatrixCOO(&IL, &JL, &valLCOO, nzL);
+	mallocMatrixCOO(&IU, &JU, &valUCOO, nzU);
 
-	//checkAndFillDiag(&I, &J, nz, N, &valCOO);
+	CRStoCOO(N, nzL, IL, JL, valLCOO, indxBinL, colBinL, valBinL);
+	CRStoCOO(N, nzU, IU, JU, valUCOO, indxBinU, colBinU, valBinU);
+	printf("\n converted! \n");
+
 	mallocVectors(&e, &y, &b, &xCRS, &yCRS, &bCRS, &xMKL, &yMKL,
-		&bMKL, &xNode, &yNode, &bNode, &xBlock, &yBlock, &bBlock, &useless, N);
+		&bMKL, &xBlock, &yBlock, &bBlock, N);
 	randVector(e, N);
-	//cutUpperTriangleCOO(nz, I, J, valCOO, &nzL, &IL, &JL, &valLCOO);
-	printf("Finished cutting coordinate matrix\n");
-	//transposeCOO(nzL, IL, JL, valLCOO, nzU, &IU, &JU, &valUCOO);
 
 
 	printf("nzU = %d\n nzL = %d\n N = %d\n\n", nzU, nzL, N);
 
 	/// Convert to CRS/CCS
+	printf("converting 1/4\n");
 	COOtoCRS(N, nzU, IU, JU, valUCOO, &indxU, &colU, &valUCRS);
+	printf("converting 2/4\n");
 	COOtoCRS(N, nzL, IL, JL, valLCOO, &indxL, &colL, &valLCRS);
+	printf("converting 3/4\n");
 	COOtoCCS(N, nzU, IU, JU, valUCOO, &UpIndxCCS, &UpRowCCS, &valUCCS);
+	printf("converting 4/4\n");
 	COOtoCCS(N, nzL, IL, JL, valLCOO, &LowIndxCCS, &LowRowCCS, &valLCCS);
-	//saveBinCRS(argv[2], N, row, col, valCRS);
-	//printf("Finished saving CRS matrix\n");
-
 	/// Mult U*e = y /// L*y = b
 	matrixMultVector(N, e, y, valUCRS, colU, indxU);
 	matrixMultVector(N, y, b, valLCRS, colL, indxL);
 
 	for (int i = 0; i < N; i++)
-		bCRS[i] = bNode[i] = bBlock[i] = bMKL[i] = b[i];
+		bCRS[i] = bBlock[i] = bMKL[i] = b[i];
 
 	/// CRS находим y из L*y=bx /// находим х из U*x=y
 	printf("gaussBackLow started\n");
@@ -77,14 +80,6 @@ int main(int argc, char* argv[]) {
 	/// PrintSuperNodes
 	printf("\n NodesNlow / N : %d/%d \n", NodesNLow - 1, N);
 	printf("\n NodesNUp / N : %d/%d \n", NodesNUp - 1, N);
-
-	/// NodeSolverLow & NodeSolverUp
-	//printf("NodeSolverLow started\n");
-	//NodeTStart = clock();
-	//nodeSolverLow(valLCRS, colL, indxL, SNodesLow, NodesNLow, yNode, bNode, N);
-	//nodeSolverUp(valUCRS, colU, indxU, SNodesUp, NodesNUp, xNode, yNode, N);
-	//NodeTFinish = clock();
-	//printf("NodeSolverUp finished\n");
 
 	/// BlockSolverLow & BlockSolverUp
 	printf("BlockSolverLow started\n");
@@ -113,18 +108,15 @@ int main(int argc, char* argv[]) {
 
 	/// CheckResult
 	printf("\n Size: %d x %d , nzL = %d , nzU = %d\n", N, N, nzL, nzU);
-	printf("\n\n [CRS]\n");
+	printf("\n[CRS]\n");
 	long long CRSerrors = CheckSolv(N, e, xCRS);
 	printf("[MKL]\n");
 	long long MKLErrors = CheckSolv(N, e, xMKL);
-	//printf("[Node]\n");
-	//long long NodeErrors = CheckSolv(N, e, xNode);
 	printf("[Block]\n");
 	long long BlockErrors = CheckSolv(N, e, xBlock);
 
 	double CRSAbsErrors = absError(N, e, xCRS);
 	double MKLAbsErrors = absError(N, e, xMKL);
-	//double NodeAbsErrors = absError(N, e, xNode);
 	double BlockAbsErrors = absError(N, e, xBlock);
 
 	/// PrintResult
@@ -147,15 +139,6 @@ int main(int argc, char* argv[]) {
 			MKLErrors, N, (MKLTFinish - MKLTStart) / (float)CLOCKS_PER_SEC * 1000.0f);
 	}
 
-	//if (NodeErrors == 0) {
-	//	printf("\n[Node] All is Ok! absErrors = %.10f \n Time is %f\n",
-	//		NodeAbsErrors, (NodeTFinish - NodeTStart) / (float)CLOCKS_PER_SEC * 1000.0f);
-	//}
-	//else {
-	//	printf("\n[Node] Errors: %d/%d \n Time is %f\n",
-	//		NodeErrors, N, (NodeTFinish - NodeTStart) / (float)CLOCKS_PER_SEC * 1000.0f);
-	//}
-
 	if (BlockErrors == 0) {
 		printf("\n[Block] All is Ok! absErrors = %.10f \n Time is %f\n",
 			BlockAbsErrors, (BlockTFinish - BlockTStart) / (float)CLOCKS_PER_SEC * 1000.0f);
@@ -167,14 +150,11 @@ int main(int argc, char* argv[]) {
 
 	/// FreeMem
 	free(e); free(y); free(b); free(xMKL); free(yMKL); free(bMKL);
-	free(xCRS);	free(yCRS);	free(bCRS);	free(xNode); free(yNode); free(bNode);
-	free(xBlock); free(yBlock);	free(bBlock);
-	//free(I); 
-	free(IU); 
-	//free(J);
-	free(JU); free(colU); free(colL); 
-	//free(valCOO);
-	free(valUCOO); free(valUCRS);
+	free(xCRS);	free(yCRS);	free(bCRS);
+	free(xBlock); free(yBlock);	free(bBlock); 
+	free(IU); free(JU); free(colU); free(colL); 
+	free(indxBinL); free(indxBinU); free(colBinL); free(colBinU);
+	free(valUCOO); free(valUCRS); free(valBinL); free(valBinU);
 	free(valLCRS); free(indxU);	free(indxL); free(valLCCS); free(valUCCS);
 	free(UpRowCCS); free(LowRowCCS); free(UpIndxCCS); free(LowIndxCCS);
 

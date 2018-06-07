@@ -90,14 +90,16 @@ long long mm_write_mtx_crd(char fname[], long long M, long long N, long long nz,
 	return 0;
 }
 
-int ReadMatrixFromBinaryFile(char* matrixName, int &nz, int &N, long long **indx, long long **col, double** value) {
+int ReadMatrixFromBinaryFile(char* matrixName, long long &nz, long long &N,
+	long long **indx, long long **col, double** value) {
 
 	FILE* matrixFile = 0;
 	int *tempIndx;
-	int error = 0; 
+	int error = 0;
 	int countRead = 0;
 	int* colInt, *indxInt;
 
+	int intN, intNz;
 
 	matrixFile = fopen(matrixName, "rb");
 	if (matrixFile == 0)
@@ -106,28 +108,30 @@ int ReadMatrixFromBinaryFile(char* matrixName, int &nz, int &N, long long **indx
 		return 0;
 	}
 
-	countRead = fread(&N, sizeof(int), 1, matrixFile);
+	countRead = fread(&intN, sizeof(int), 1, matrixFile);
 	if (countRead != 1)
 	{
 		error = 1;
 		printf("Error open files %s\n", matrixName);
 	}
-	countRead = fread(&nz, sizeof(int), 1, matrixFile);
+	countRead = fread(&intNz, sizeof(int), 1, matrixFile);
 	if (countRead != 1)
 	{
 		error = 1;
 		printf("Error open files %s\n", matrixName);
 	}
+	N = (long long)intN;
+	nz = (long long)intNz;
 
 	//AllocMatrix((*n), countNotZero, column, row, val);
 
-	(*indx) = (long long *)malloc((N+1) * sizeof(long long));
+	(*indx) = (long long *)malloc((N + 1) * sizeof(long long));
 	(*col) = (long long *)malloc(nz * sizeof(long long));
 	(*value) = (double *)malloc(nz * sizeof(double));
 
 	indxInt = (int*)malloc((N + 1) * sizeof(int));
 	colInt = (int*)malloc(nz * sizeof(int));
-	
+
 
 	tempIndx = (int*)malloc((N + 1) * sizeof(int));
 
@@ -204,6 +208,67 @@ long long COOtoCRS(long long n, long long nz, long long *I, long long *J,
 	return 0;
 }
 
+void COOtoCCS(long long N, long long nz, long long *I, long long *J, double *valCOO,
+	long long **indx, long long **row, double **valCcs) {
+	long long i;
+	long long *places;
+
+	(*indx) = (long long *)malloc((N + 1) * sizeof(long long));
+	(*row) = (long long *)malloc((nz) * sizeof(long long));
+	(*valCcs) = (double *)malloc((nz) * sizeof(double));
+	places = (long long *)malloc((N + 1) * sizeof(long long));
+
+	for (i = 0; i < N + 1; i++) {
+		(*indx)[i] = 0;
+	}
+	for (i = 0; i < nz; i++) {
+		(*indx)[J[i] + 1] += 1;
+	}
+	for (i = 0; i < N; i++) {
+		(*indx)[i + 1] += (*indx)[i];
+		places[i] = (*indx)[i];
+	}
+	for (i = 0; i < nz; i++) {
+		(*row)[places[J[i]]] = I[i];
+		(*valCcs)[places[J[i]]] = valCOO[i];
+		places[J[i]]++;
+	}
+	//sort each row
+	for (i = 0; i < N; i++) {
+		long long start, finish, j, k;
+		start = (*indx)[i];
+		finish = (*indx)[i + 1];
+		//need to write bubble sort
+		for (j = start; j < finish; j++)
+			for (k = start; k < finish - j - 1; k++)
+				if ((*row)[k] > (*row)[k + 1]) {
+					long long tempCol = (*row)[k];
+					(*row)[k] = (*row)[k + 1];
+					(*row)[k + 1] = tempCol;
+
+					double tempVal = (*valCcs)[k];
+					(*valCcs)[k] = (*valCcs)[k + 1];
+					(*valCcs)[k + 1] = tempVal;
+				}
+	}
+	free(places);
+}
+
+
+void CRStoCOO(long long N, long long nz, long long* I, long long *J, double* valCOO,
+	long long* indxCRS, long long* colCRS, double* valCRS) {
+
+	for (long long i = 0; i < nz; i++) {
+		valCOO[i] = valCRS[i];
+		J[i] = colCRS[i];
+	}
+	for (long long i = 0; i < N; i++) {
+		for (long long j = indxCRS[i]; j < indxCRS[i + 1]; j++) {
+			I[j] = i;
+		}
+	}
+}
+
 void printVectorF(double* b, long long N) {
 	printf("Vector double:\n");
 	for (long long i = 0; i < N; i++) {
@@ -220,16 +285,29 @@ void printVectorI(long long* b, long long N) {
 	printf("\n\n");
 }
 
-long long saveBinCRS(const char * fileName, long long n, long long * row,
-	long long * col, double * val)
-{
+long long saveBinCRS(const char * fileName, long long N, long long * indxLong,
+	long long * col, double * val) {
+
+	int n = (int)N;
+	int nz = (int)indxLong[N];
+
+	int *indx = (int *)malloc((N + 1) * sizeof(int));
+	for (int i = 0; i < N + 1; i++) {
+		indx[i] = (int)indxLong[i];
+	}
+
+	int *colInt = (int *)malloc(nz * sizeof(int));
+	for (int i = 0; i < nz; i++) {
+		colInt[i] = (int)col[i];
+	}
+
 	FILE *f;
 	f = fopen(fileName, "wb");
-	fwrite(&n, sizeof(long long), 1, f);
-	fwrite(&(row[n]), sizeof(long long), 1, f);
-	fwrite(col, sizeof(long long), row[n], f);
-	fwrite(row, sizeof(long long), n + 1, f);
-	fwrite(val, sizeof(double), row[n], f);
+	fwrite(&n, sizeof(int), 1, f);
+	fwrite(&nz, sizeof(int), 1, f);
+	fwrite(colInt, sizeof(int), indx[n], f);
+	fwrite(indx, sizeof(int), n + 1, f);
+	fwrite(val, sizeof(double), indx[n], f);
 	fclose(f);
 	return 0;
 }
@@ -316,9 +394,7 @@ long long transposeCOO(long long nz, long long * I, long long * J)
 void mallocVectors(double** x, double** y, double** b,
 	double** xCRS, double** yCRS, double** bCRS,
 	double** xMKL, double** yMKL, double** bMKL,
-	double** xNode, double** yNode, double** bNode,
-	double** xBlock, double** yBlock, double** bBlock,
-	double** bNodeUp, long long N) {
+	double** xBlock, double** yBlock, double** bBlock, long long N) {
 
 	(*x) = (double*)malloc((N) * sizeof(double));
 	(*y) = (double*)malloc((N) * sizeof(double));
@@ -329,13 +405,9 @@ void mallocVectors(double** x, double** y, double** b,
 	(*xMKL) = (double*)malloc((N + 1) * sizeof(double));
 	(*yMKL) = (double*)malloc((N + 1) * sizeof(double));
 	(*bMKL) = (double*)malloc((N + 1) * sizeof(double));
-	(*xNode) = (double*)malloc((N) * sizeof(double));
-	(*yNode) = (double*)malloc((N) * sizeof(double));
-	(*bNode) = (double*)malloc((N) * sizeof(double));
 	(*xBlock) = (double*)malloc((N) * sizeof(double));
 	(*yBlock) = (double*)malloc((N) * sizeof(double));
 	(*bBlock) = (double*)malloc((N) * sizeof(double));
-	(*bNodeUp) = (double*)malloc((N) * sizeof(double));
 }
 
 void mallocMatrixNxM(double *** A, long long N, long long M) {
@@ -348,7 +420,6 @@ void mallocMatrixNxM(double *** A, long long N, long long M) {
 void randVector(double* b, long long N) {
 	for (long long i = 0; i < N; i++) {
 		b[i] = rand() % 10 / 3.0f + 1;
-		// b[i] = i + 1;
 	}
 }
 
@@ -841,19 +912,23 @@ void gaussBackBlockUpFullPrl(long long startNode, long long finishNode, double *
 
 void changeBLowCCS(double *MatrixLowVal, long long *MatrixLowRow, long long *MatrixLowIndx,
 	long long SNodesLowl, long long SNodesLowl_1, long long N, double* x, double* bLow) {
+	long long m = 0;
 	for (long long j = SNodesLowl; j < SNodesLowl_1; j++) {//ןמ גסול סעמכבאל
-		for (long long i = MatrixLowIndx[j]; i < MatrixLowIndx[j + 1]; i++) {//גהמכü סעמכבצא
+		for (long long i = MatrixLowIndx[j] + SNodesLowl_1 - SNodesLowl - m; i < MatrixLowIndx[j + 1]; i++) {//גהמכü סעמכבצא
 			bLow[MatrixLowRow[i]] -= MatrixLowVal[i] * x[j];
 		}
+		m++;
 	}
 }
 
 void changeBUpCCS(double *MatrixUpVal, long long *MatrixUpRow, long long *MatrixUpIndx,
 	long long SNodesUpl, long long SNodesUpl_1, long long N, double* x, double* bUp) {
+	long long m = 1;
 	for (long long j = SNodesUpl_1; j < SNodesUpl; j++) {//ןמ גסול סעמכבאל
-		for (long long i = MatrixUpIndx[j]; i < MatrixUpIndx[j + 1]; i++) {//גהמכü סעמכבצא
+		for (long long i = MatrixUpIndx[j]; i < MatrixUpIndx[j + 1] - m; i++) {//גהמכü סעמכבצא
 			bUp[MatrixUpRow[i]] -= MatrixUpVal[i] * x[j];
 		}
+		m++;
 	}
 }
 
@@ -977,51 +1052,6 @@ void nodeSolverUp(double *MatrixUpVal, long long *MatrixUpRow, long long *Matrix
 		gaussBackUp(SNodesUp[l], SNodesUp[l + 1], xUp, bUp, MatrixUpVal, MatrixUpRow, MatrixUpIndx);
 	}
 	return;
-}
-
-void COOtoCCS(long long N, long long nz, long long *I, long long *J, double *valCOO, long long **indx, long long **row, double **valCcs) {
-	long long i;
-	long long *places;
-
-	(*indx) = (long long *)malloc((N + 1) * sizeof(long long));
-	(*row) = (long long *)malloc((nz) * sizeof(long long));
-	(*valCcs) = (double *)malloc((nz) * sizeof(double));
-	places = (long long *)malloc((N + 1) * sizeof(long long));
-
-	for (i = 0; i < N + 1; i++) {
-		(*indx)[i] = 0;
-	}
-	for (i = 0; i < nz; i++) {
-		(*indx)[J[i] + 1] += 1;
-	}
-	for (i = 0; i < N; i++) {
-		(*indx)[i + 1] += (*indx)[i];
-		places[i] = (*indx)[i];
-	}
-	for (i = 0; i < nz; i++) {
-		(*row)[places[J[i]]] = I[i];
-		(*valCcs)[places[J[i]]] = valCOO[i];
-		places[J[i]]++;
-	}
-	//sort each row
-	for (i = 0; i < N; i++) {
-		long long start, finish, j, k;
-		start = (*indx)[i];
-		finish = (*indx)[i + 1];
-		//need to write bubble sort
-		for (j = start; j < finish; j++)
-			for (k = start; k < finish - j - 1; k++)
-				if ((*row)[k] > (*row)[k + 1]) {
-					long long tempCol = (*row)[k];
-					(*row)[k] = (*row)[k + 1];
-					(*row)[k + 1] = tempCol;
-
-					double tempVal = (*valCcs)[k];
-					(*valCcs)[k] = (*valCcs)[k + 1];
-					(*valCcs)[k + 1] = tempVal;
-				}
-	}
-	free(places);
 }
 
 void makeMatrix6x6COO(long long * I, long long * J, double * COOVal, long long NzL) {
@@ -1434,7 +1464,7 @@ void generateBigBlockMatrixU(long long * I, long long * J, double * COOVal,
 				flag = true;
 				flag2 = false;
 				for (long long j = i + blockI*blockSize; j < N; j++) {
-					if ((j % blockSize == 0)&&(flag2)) {
+					if ((j % blockSize == 0) && (flag2)) {
 						flag = !flag;
 					}
 					if (flag) {
