@@ -51,7 +51,7 @@ int main(int argc, char* argv[]) {
 	//if (readMTX(argv[2], &IU, &JU, &valUCOO, &M, &N, &nzU) != 0)
 	//	exit(1);
 
-	M = 50;
+	M = 1000;
 
 	//checkAndFillDiag(&I, &J, nz, N, &valCOO);
 	//mallocVectors(&e, &y, &b, &xCRS, &yCRS, &bCRS, &xMKL, &yMKL,
@@ -133,7 +133,9 @@ int main(int argc, char* argv[]) {
 	/// CRS находим y из L*y=bx /// находим х из U*x=y
 	printf("gaussBackLow started\n");
 	CRSTStart = clock();
+#pragma opm parallel for
 	for (int i = 0; i < M; i++) {
+
 		gaussBackLow(0, N, yCRS[i], bCRS[i], valLCRS, colL, indxL);
 		gaussBackUp(N, 0, xCRS[i], yCRS[i], valUCRS, colU, indxU);
 	}
@@ -166,6 +168,7 @@ int main(int argc, char* argv[]) {
 	printf("BlockSolverLow started\n");
 	BlockTStart = clock();
 	for (int i = 0; i < M; i++) {
+#pragma noinline
 		blockSolverLowCCS(valLCRS, colL, indxL, valLCCS, LowRowCCS, LowIndxCCS, SNodesLow, NodesNLow, yBlock[i], bBlock[i], N);
 		blockSolverUpCCS(valUCRS, colU, indxU, valUCCS, UpRowCCS, UpIndxCCS, SNodesUp, NodesNUp, xBlock[i], yBlock[i], N);
 	}

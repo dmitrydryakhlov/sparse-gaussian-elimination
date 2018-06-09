@@ -29,7 +29,7 @@ int main(int argc, char* argv[]) {
 	ReadMatrixFromBinaryFile(argv[2], nzU, N, &indxBinU, &colBinU, &valBinU);
 
 	printf("\n readed! \n");
-	printf("nzU = %d\n nzL = %d\n N = %d M = %d\n\n", nzU, nzL, N, M);
+	printf("nzU = %d\n nzL = %d\n N = %d M = %d\n\n", nzU, nzL, N, N);
 
 	mallocMatrixCOO(&IL, &JL, &valLCOO, nzL);
 	mallocMatrixCOO(&IU, &JU, &valUCOO, nzU);
@@ -63,8 +63,8 @@ int main(int argc, char* argv[]) {
 
 	/// CRS находим y из L*y=bx /// находим х из U*x=y
 	printf("gaussBackLow started\n");
-	CRSTStart = clock();
 	gaussBackLow(0, N, yCRS, bCRS, valLCRS, colL, indxL);
+	CRSTStart = clock();
 	gaussBackUp(N, 0, xCRS, yCRS, valUCRS, colU, indxU);
 	CRSTFinish = clock();
 	printf("gaussBackUp finished\n");
@@ -83,8 +83,8 @@ int main(int argc, char* argv[]) {
 
 	/// BlockSolverLow & BlockSolverUp
 	printf("BlockSolverLow started\n");
-	BlockTStart = clock();
 	blockSolverLowCCS(valLCRS, colL, indxL, valLCCS, LowRowCCS, LowIndxCCS, SNodesLow, NodesNLow, yBlock, bBlock, N);
+	BlockTStart = clock();
 	blockSolverUpCCS(valUCRS, colU, indxU, valUCCS, UpRowCCS, UpIndxCCS, SNodesUp, NodesNUp, xBlock, yBlock, N);
 	BlockTFinish = clock();
 	printf("BlockSolverUp finished\n");
@@ -103,8 +103,8 @@ int main(int argc, char* argv[]) {
 	/// MKLSolverUp &MKLSolverLow
 	MKLTStart = clock();
 	mkl_dcsrtrsv("L", "N", "N", &MKLn_short, valLCRS, indxL_short, colL_short, b, yMKL);
-	mkl_dcsrtrsv("U", "N", "N", &MKLn_short, valUCRS, indxU_short, colU_short, yMKL, xMKL);
 	MKLTFinish = clock();
+	mkl_dcsrtrsv("U", "N", "N", &MKLn_short, valUCRS, indxU_short, colU_short, yMKL, xMKL);
 
 	/// CheckResult
 	printf("\n Size: %d x %d , nzL = %d , nzU = %d\n", N, N, nzL, nzU);

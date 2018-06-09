@@ -40,7 +40,7 @@ int main(int argc, char* argv[]) {
 	if (readMTX(argv[2], &IU, &JU, &valUCOO, &M, &N, &nzU) != 0)
 		exit(1);
 
-	M = 2000;
+	M = 20;
 	
 	//checkAndFillDiag(&I, &J, nz, N, &valCOO);
 	//mallocVectors(&e, &y, &b, &xCRS, &yCRS, &bCRS, &xMKL, &yMKL,

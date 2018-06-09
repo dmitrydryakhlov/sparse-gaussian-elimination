@@ -978,7 +978,7 @@ void changeBUpFullPrl(double *MatrixUpVal, long long *MatrixUpRow, long long *Ma
 	}
 }
 
-void blockSolverLowCCS(double *MatrixLowValCRS, long long *MatrixLowColCRS, long long *MatrixLowIndxCRS,
+void blockSolverLowCCS2(double *MatrixLowValCRS, long long *MatrixLowColCRS, long long *MatrixLowIndxCRS,
 	double *MatrixLowValCCS, long long *MatrixRowColCCS, long long *MatrixLowIndxCCS,
 	long long* SNodesLow, long long NodesNLow, double* xLow, double* bLow, long long N) {
 	for (long long l = 0; l < NodesNLow - 1; l++) { //по всем нодам
@@ -987,10 +987,54 @@ void blockSolverLowCCS(double *MatrixLowValCRS, long long *MatrixLowColCRS, long
 	}
 }
 
+void blockSolverLowCCS(double *MatrixLowValCRS, long long *MatrixLowColCRS, long long *MatrixLowIndxCRS,
+	double *MatrixLowValCCS, long long *MatrixRowColCCS, long long *MatrixLowIndxCCS,
+	long long* SNodesLow, long long NodesNLow, double* xLow, double* bLow, long long N) {
+	long long *temp = (long long*)malloc(N * sizeof(long long));
+	for (int i = 0; i < N; i++)
+		temp[i] = 0;
+	for (long long l = 0; l < NodesNLow - 1; l++) { //по всем нодам
+		gaussBackBlockLow(SNodesLow[l], SNodesLow[l + 1], xLow, bLow, MatrixLowValCRS, MatrixLowColCRS, MatrixLowIndxCRS);
+		for (long long i = MatrixLowIndxCCS[SNodesLow[l]] + SNodesLow[l + 1] - SNodesLow[l]; i < MatrixLowIndxCCS[SNodesLow[l] + 1]; i++) {
+			long long k = MatrixRowColCCS[i]; //номер начала к-го столбца
+			long long z = temp[k];            // сколько уже было пройдено в к-той строке
+			double *MatrixLowValCRS_P = MatrixLowValCRS + MatrixLowIndxCRS[k] + z;
+
+			for (long long j = 0; j < SNodesLow[l + 1] - SNodesLow[l]; j++)
+			{
+				bLow[k] -= MatrixLowValCRS_P[j] * xLow[j + SNodesLow[l]];
+			}
+			temp[k] += SNodesLow[l + 1] - SNodesLow[l];
+		}
+	}
+}
+
 void blockSolverUpCCS(double *MatrixUpValCRS, long long *MatrixUpColCRS, long long *MatrixUpIndxCRS,
 	double *MatrixUpValCCS, long long *MatrixUpColCCS, long long *MatrixUpIndxCCS,
 	long long* SNodesUp, long long NodesNUp, double* xUp, double* bUp, long long N) {
 
+	long long *temp = (long long*)malloc(N * sizeof(long long));
+	for (int i = 0; i < N; i++)
+		temp[i] = 0;
+	for (long long l = 0; l < NodesNUp - 1; l++) { //по всем нодам
+		gaussBackBlockUp(SNodesUp[l], SNodesUp[l + 1], xUp, bUp, MatrixUpValCRS, MatrixUpColCRS, MatrixUpIndxCRS);
+
+		for (long long i = MatrixUpIndxCCS[SNodesUp[l]] + SNodesUp[l + 1] - SNodesUp[l] - 1; i > MatrixUpIndxCCS[SNodesUp[l] - 1] - 1; i--) {
+			long long k = MatrixUpColCCS[i];
+			long long z = temp[k];
+			double *MatrixUpValCRS_P = MatrixUpValCRS + MatrixUpIndxCRS[k + 1] - (SNodesUp[l] - SNodesUp[l + 1]) - z;
+			for (long long j = SNodesUp[l] - SNodesUp[l + 1] - 1; j >= 0; j--)
+			{
+				bUp[k] -= MatrixUpValCRS_P[j] * xUp[j + SNodesUp[l + 1]];
+			}
+			temp[k] += SNodesUp[l] - SNodesUp[l + 1];
+		}
+	}
+}
+
+void blockSolverUpCCS2(double *MatrixUpValCRS, long long *MatrixUpColCRS, long long *MatrixUpIndxCRS,
+	double *MatrixUpValCCS, long long *MatrixUpColCCS, long long *MatrixUpIndxCCS,
+	long long* SNodesUp, long long NodesNUp, double* xUp, double* bUp, long long N) {
 	for (long long l = 0; l < NodesNUp - 1; l++) { //по всем нодам
 		gaussBackBlockUp(SNodesUp[l], SNodesUp[l + 1], xUp, bUp, MatrixUpValCRS, MatrixUpColCRS, MatrixUpIndxCRS);
 		changeBUpCCS(MatrixUpValCCS, MatrixUpColCCS, MatrixUpIndxCCS, SNodesUp[l], SNodesUp[l + 1], N, xUp, bUp);
