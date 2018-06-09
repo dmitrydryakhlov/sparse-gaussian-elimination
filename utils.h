@@ -90,17 +90,39 @@ void blockSolverUpCCS(double *MatrixUpValCRS, long long *MatrixUpColCRS, long lo
 	double *MatrixUpValCCS, long long *MatrixUpRowCCS, long long *MatrixUpIndxCCS,
 	long long* SNodesUp, long long NodesNUp, double* xUp, double* bUp, long long N);
 
-void blockSolverLowFull(double *MatrixLowValCRS, long long *MatrixLowColCRS, long long *MatrixLowIndxCRS,
+void blockSolverLowCRS(double *MatrixLowValCRS, long long *MatrixLowColCRS, long long *MatrixLowIndxCRS,
+	double *MatrixLowValCCS, long long *MatrixRowColCCS, long long *MatrixLowIndxCCS,
+	long long* SNodesLow, long long NodesNLow, double* xLow, double* bLow, long long N);
+
+void blockSolverUpCRS(double *MatrixUpValCRS, long long *MatrixUpColCRS, long long *MatrixUpIndxCRS,
+	double *MatrixUpValCCS, long long *MatrixUpColCCS, long long *MatrixUpIndxCCS,
+	long long* SNodesUp, long long NodesNUp, double* xUp, double* bUp, long long N);
+
+void blockSolverLowFullCCS(double *MatrixLowValCRS, long long *MatrixLowColCRS, long long *MatrixLowIndxCRS,
 	double *MatrixLowValCCS, long long *MatrixLowRowCCS, long long *MatrixLowIndxCCS,
 	long long* SNodesLow, long long NodesNLow, double** xLow, double** bLow, long long N, long long M);
-void blockSolverUpFull(double *MatrixUpValCRS, long long *MatrixUpColCRS, long long *MatrixUpIndxCRS,
+void blockSolverUpFullCCS(double *MatrixUpValCRS, long long *MatrixUpColCRS, long long *MatrixUpIndxCRS,
 	double *MatrixUpValCCS, long long *MatrixUpRowCCS, long long *MatrixUpIndxCCS,
 	long long* SNodesUp, long long NodesNUp, double** xUp, double** bUp, long long N, long long M);
 
-void blockSolverLowFullPrl(double *MatrixLowValCRS, long long *MatrixLowColCRS, long long *MatrixLowIndxCRS,
+void blockSolverLowFullCCSPrl(double *MatrixLowValCRS, long long *MatrixLowColCRS, long long *MatrixLowIndxCRS,
 	double *MatrixLowValCCS, long long *MatrixLowRowCCS, long long *MatrixLowIndxCCS,
 	long long* SNodesLow, long long NodesNLow, double** xLow, double** bLow, long long N, long long M);
-void blockSolverUpFullPrl(double *MatrixUpValCRS, long long *MatrixUpColCRS, long long *MatrixUpIndxCRS,
+void blockSolverUpFullCCSPrl(double *MatrixUpValCRS, long long *MatrixUpColCRS, long long *MatrixUpIndxCRS,
+	double *MatrixUpValCCS, long long *MatrixUpRowCCS, long long *MatrixUpIndxCCS,
+	long long* SNodesUp, long long NodesNUp, double** xUp, double** bUp, long long N, long long M);
+
+void blockSolverLowFullCRS(double *MatrixLowValCRS, long long *MatrixLowColCRS, long long *MatrixLowIndxCRS,
+	double *MatrixLowValCCS, long long *MatrixLowRowCCS, long long *MatrixLowIndxCCS,
+	long long* SNodesLow, long long NodesNLow, double** xLow, double** bLow, long long N, long long M);
+void blockSolverUpFullCRS(double *MatrixUpValCRS, long long *MatrixUpColCRS, long long *MatrixUpIndxCRS,
+	double *MatrixUpValCCS, long long *MatrixUpRowCCS, long long *MatrixUpIndxCCS,
+	long long* SNodesUp, long long NodesNUp, double** xUp, double** bUp, long long N, long long M);
+
+void blockSolverLowFullCRSPrl(double *MatrixLowValCRS, long long *MatrixLowColCRS, long long *MatrixLowIndxCRS,
+	double *MatrixLowValCCS, long long *MatrixLowRowCCS, long long *MatrixLowIndxCCS,
+	long long* SNodesLow, long long NodesNLow, double** xLow, double** bLow, long long N, long long M);
+void blockSolverUpFullCRSPrl(double *MatrixUpValCRS, long long *MatrixUpColCRS, long long *MatrixUpIndxCRS,
 	double *MatrixUpValCCS, long long *MatrixUpRowCCS, long long *MatrixUpIndxCCS,
 	long long* SNodesUp, long long NodesNUp, double** xUp, double** bUp, long long N, long long M);
 
@@ -110,7 +132,7 @@ void makeMatrix6x6COO(long long* I, long long* J, double* COOVal, long long NzL)
 void mallocMatrixCOO(long long ** I, long long ** J, double ** COOVal, long long NzL);
 
 void makeBlockMatrix8x8LowCOO(long long * I, long long * J, double * COOVal, long long NzL);
-void makeBlockMatrix8x8UpCOO(long long * I, long long * J, float * COOVal, long long NzL);
+//void makeBlockMatrix8x8UpCOO(long long * I, long long * J, float * COOVal, long long NzL);
 
 void makeBlock8x8LowCCS(double *MatrixLowValCCS, long long *MatrixLowRowCCS, long long *MatrixLowIndxCCS, long long NzL, long long N);
 void makeBlock8x8UpCCS(double *MatrixUpValCCS, long long *MatrixUpRowCCS, long long *MatrixUpIndxCCS, long long NzU, long long N);

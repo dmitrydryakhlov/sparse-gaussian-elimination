@@ -23,10 +23,10 @@ int main(int argc, char* argv[]) {
 	double *bMKLLow, *bCRSLow, *bNodeLow, *bBlockLow, *bMKLUp, *bCRSUp, *bNodeUp, *bBlockUp;
 	long long *fullRowL, *fullRowU;
 
-	long long N = 75000;
-	long long blockSizeU = 10;
-	long long blockSizeL = 10;
-	long long fullness = 5;
+	long long N = 60000;
+	long long blockSizeU = 100;
+	long long blockSizeL = 100;
+	long long fullness = 2;
 
 	long long nzL = calcNzL(N, blockSizeL, &fullRowL, fullness);
 	long long nzU = calcNzU(N, blockSizeU, &fullRowU, fullness);
@@ -42,8 +42,8 @@ int main(int argc, char* argv[]) {
 	COOtoCRS(N, nzU, IU, JU, valUCOO, &indxU, &colU, &valUCRS);
 	COOtoCRS(N, nzL, IL, JL, valLCOO, &indxL, &colL, &valLCRS);
 
-	saveBinCRS("bin/M75000_10_5L.bin", N, indxL, colL, valLCRS);
-	saveBinCRS("bin/M75000_10_5U.bin", N, indxU, colU, valUCRS);
+	saveBinCRS("bin/M60000_100_2L.bin", N, indxL, colL, valLCRS);
+	saveBinCRS("bin/M60000_100_2U.bin", N, indxU, colU, valUCRS);
 
 	printf("nzL = %d  |  nzU = %d  |  N = %d  | blockSize = %d \n", nzL, nzU, N, blockSizeL);
 	printf("done!\n");

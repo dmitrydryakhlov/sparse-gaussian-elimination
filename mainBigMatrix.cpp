@@ -28,7 +28,7 @@ int main(int argc, char* argv[]) {
 	printf("%s\n", argv[2]);
 	ReadMatrixFromBinaryFile(argv[2], nzU, N, &indxBinU, &colBinU, &valBinU);
 
-	printf("\n readed! \n");
+	//printf("\n readed! \n");
 	printf("nzU = %d\n nzL = %d\n N = %d M = %d\n\n", nzU, nzL, N, N);
 
 	mallocMatrixCOO(&IL, &JL, &valLCOO, nzL);
@@ -46,13 +46,13 @@ int main(int argc, char* argv[]) {
 	printf("nzU = %d\n nzL = %d\n N = %d\n\n", nzU, nzL, N);
 
 	/// Convert to CRS/CCS
-	printf("converting 1/4\n");
+	//printf("converting 1/4\n");
 	COOtoCRS(N, nzU, IU, JU, valUCOO, &indxU, &colU, &valUCRS);
-	printf("converting 2/4\n");
+	//printf("converting 2/4\n");
 	COOtoCRS(N, nzL, IL, JL, valLCOO, &indxL, &colL, &valLCRS);
-	printf("converting 3/4\n");
+	//printf("converting 3/4\n");
 	COOtoCCS(N, nzU, IU, JU, valUCOO, &UpIndxCCS, &UpRowCCS, &valUCCS);
-	printf("converting 4/4\n");
+	//printf("converting 4/4\n");
 	COOtoCCS(N, nzL, IL, JL, valLCOO, &LowIndxCCS, &LowRowCCS, &valLCCS);
 	/// Mult U*e = y /// L*y = b
 	matrixMultVector(N, e, y, valUCRS, colU, indxU);
@@ -62,32 +62,32 @@ int main(int argc, char* argv[]) {
 		bCRS[i] = bBlock[i] = bMKL[i] = b[i];
 
 	/// CRS находим y из L*y=bx /// находим х из U*x=y
-	printf("gaussBackLow started\n");
-	gaussBackLow(0, N, yCRS, bCRS, valLCRS, colL, indxL);
+	//printf("gaussBackLow started\n");
 	CRSTStart = clock();
+	gaussBackLow(0, N, yCRS, bCRS, valLCRS, colL, indxL);
 	gaussBackUp(N, 0, xCRS, yCRS, valUCRS, colU, indxU);
 	CRSTFinish = clock();
-	printf("gaussBackUp finished\n");
+	//printf("gaussBackUp finished\n");
 
 	/// CalcSuperNodesLow & CalcSuperNodesUp
-	printf("calcSuperNodes started\n");
+	//printf("calcSuperNodes started\n");
 	CalcSNodesTStart = clock();
 	CalcSuperNodesLowCCS(valLCCS, LowRowCCS, LowIndxCCS, &SNodesLow, NodesNLow, nzL, N);
 	CalcSuperNodesUpCCS(valUCCS, UpRowCCS, UpIndxCCS, &SNodesUp, NodesNUp, nzU, N);
 	CalcSNodesTFinish = clock();
-	printf("calcSuperNodes finished\n");
+	//printf("calcSuperNodes finished\n");
 
 	/// PrintSuperNodes
 	printf("\n NodesNlow / N : %d/%d \n", NodesNLow - 1, N);
 	printf("\n NodesNUp / N : %d/%d \n", NodesNUp - 1, N);
 
 	/// BlockSolverLow & BlockSolverUp
-	printf("BlockSolverLow started\n");
-	blockSolverLowCCS(valLCRS, colL, indxL, valLCCS, LowRowCCS, LowIndxCCS, SNodesLow, NodesNLow, yBlock, bBlock, N);
+	//printf("BlockSolverLow started\n");
 	BlockTStart = clock();
-	blockSolverUpCCS(valUCRS, colU, indxU, valUCCS, UpRowCCS, UpIndxCCS, SNodesUp, NodesNUp, xBlock, yBlock, N);
+	blockSolverLowCRS(valLCRS, colL, indxL, valLCCS, LowRowCCS, LowIndxCCS, SNodesLow, NodesNLow, yBlock, bBlock, N);
+	blockSolverUpCRS(valUCRS, colU, indxU, valUCCS, UpRowCCS, UpIndxCCS, SNodesUp, NodesNUp, xBlock, yBlock, N);
 	BlockTFinish = clock();
-	printf("BlockSolverUp finished\n");
+	//printf("BlockSolverUp finished\n");
 
 	///MKL Prepare
 	const long long  MKLn = N;
@@ -108,11 +108,11 @@ int main(int argc, char* argv[]) {
 
 	/// CheckResult
 	printf("\n Size: %d x %d , nzL = %d , nzU = %d\n", N, N, nzL, nzU);
-	printf("\n[CRS]\n");
+	//printf("\n[CRS]\n");
 	long long CRSerrors = CheckSolv(N, e, xCRS);
-	printf("[MKL]\n");
+	//printf("[MKL]\n");
 	long long MKLErrors = CheckSolv(N, e, xMKL);
-	printf("[Block]\n");
+	//printf("[Block]\n");
 	long long BlockErrors = CheckSolv(N, e, xBlock);
 
 	double CRSAbsErrors = absError(N, e, xCRS);
